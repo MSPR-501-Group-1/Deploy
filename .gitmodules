@@ -1,0 +1,9 @@
+[submodule "backend"]
+	path = backend
+	url = https://github.com/MSPR-501-Group-1/backend.git
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/MSPR-501-Group-1/frontend.git
+[submodule "etl"]
+	path = etl
+	url = https://github.com/MSPR-501-Group-1/etl.git
