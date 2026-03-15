@@ -1,9 +1,9 @@
 
 services:
 
-  # ─────────────────────────────────────────
-  #  BASE DE DONNÉES PostgreSQL
-  # ─────────────────────────────────────────
+# ─────────────────────────────────────────
+#  BASE DE DONNÉES PostgreSQL
+# ─────────────────────────────────────────
   db:
     image: postgres:16-alpine
     container_name: database
@@ -18,7 +18,8 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - ./database/initdb.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./database/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
+      - ./database/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-health_app}"]
