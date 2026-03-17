@@ -82,7 +82,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      DB_HOST: db
+      DB_HOST: database
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB:-health_app}
       DB_USER: ${POSTGRES_USER:-admin}
