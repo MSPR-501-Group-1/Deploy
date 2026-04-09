@@ -59,6 +59,7 @@ services:
     volumes:
       - ./etl/data:/app/data
       - ./etl/logs:/app/logs
+      - shared_csv:/data/processed
     depends_on:
       db:
         condition: service_healthy
@@ -99,6 +100,8 @@ services:
       JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
     ports:
       - "3000:3000"
+    volumes:
+      - shared_csv:/data/processed
     depends_on:
       db:
         condition: service_healthy
@@ -165,6 +168,7 @@ services:
 # ─────────────────────────────────────────
 volumes:
   pgdata:
+  shared_csv:
 
 networks:
   internal:
