@@ -216,7 +216,7 @@ Dépendances / blocages: INT-FB-001
 ### INT-FB-009
 ID: INT-FB-009
 Titre: Connecter AuditPage à un journal consolidé SQL existant
-**Statut: TODO**
+**Statut: BACKLOG**
 Description: Exposer un endpoint audit consolidant les traces disponibles sans créer de nouvelle table.
 Il manque quoi et pourquoi: Il manque un endpoint audit réel car la page dépend encore de auditMock.
 Impact évaluation (critère de grille concerné): Traçabilité et auditabilité des opérations d’administration.
@@ -267,7 +267,7 @@ Répartition priorités: P0 = 5, P1 = 3, P2 = 2, P3 = 0
 ### FE-001
 ID: FE-001
 Titre: Ajouter l'export JSON dans l'interface admin
-**Statut: TODO**
+**Statut: BACKLOG**
 Il manque quoi et pourquoi: Il manque l'export JSON car l'UI n'exporte actuellement que CSV/PDF alors que le sujet demande JSON/CSV.
 Description: Etendre le composant d'export pour proposer JSON sur les ecrans deja exportables (Dashboard, Anomalies, Audit, Validation).
 Critere sujet/grille concerne: Export des donnees nettoyees en JSON ou CSV.
@@ -512,7 +512,7 @@ Preuves d'execution:
 ### FE-009
 ID: FE-009
 Titre: Stabiliser la chaine npm (erreurs lint + warnings build)
-**Statut: DONE**
+**Statut: BLOCKED**
 Il manque quoi et pourquoi: Il manque un assainissement outillage npm car le projet affiche des erreurs bloquantes sur npm run lint et des warnings repetes au build npm run build, ce qui fragilise les validations de livraison.
 Description: Corriger les erreurs ESLint existantes et traiter les warnings npm/build prioritaires (version Node, warnings Vite/chunk, deprecations) avec une regle claire de non-regression.
 Critere sujet/grille concerne: Qualite logicielle, chaine de build reproductible et demonstration sans bruit technique.
@@ -534,8 +534,10 @@ Faisabilite (Haute/Moyenne/Faible): Haute
 Dependances: FE-003
 Date de demarrage: 2026-04-05
 Date de realisation: 2026-04-05
+Date de revalidation: 2026-04-05
 Temps reel passe (heures): 2.0
-Etat detaille: ON GOING -> DONE (typecheck + lint + build valides, runtime local aligne 22.12+, verification Docker validee)
+Temps passe audit (heures): 1.0
+Etat detaille: ON GOING -> DONE (historique lot FE-009) -> BLOCKED (revalidation audit 2026-04-05: runtime local Node 22.11.0 hors prerequis Vite 7.3.1)
 Preuves d'execution:
 - npm run typecheck (frontend/healthai-admin) -> succes.
 - npm run lint (frontend/healthai-admin) -> succes sans erreur.
@@ -548,6 +550,37 @@ Preuves d'execution:
 	- docker compose version -> v2.39.2-desktop.1
 	- docker run --rm node:22-alpine node -v -> v22.21.1
 	- docker compose build frontend -> succes (image rebuilt)
+Revalidation audit d'execution technique (2026-04-05):
+- Verdict binaire: FE-009 non complete.
+- Commandes executees (frontend/healthai-admin):
+	1. node -v -> v22.11.0
+	2. npm -v -> 11.9.0
+	3. npm ci -> warnings EBADENGINE (vite@7.3.1, @vitejs/plugin-react@5.1.4, eslint-visitor-keys@5.0.1) car Node 22.11.0 non supporte.
+	4. npm run typecheck -> succes.
+	5. npm run lint -> succes.
+	6. npm run build -> succes avec warning Vite Node: "requires Node.js version 20.19+ or 22.12+".
+	7. npm run verify -> succes fonctionnel mais warning Vite Node identique.
+	8. npm run dev -- --host 127.0.0.1 --port 5173 -> serveur demarre, warning Vite Node identique, port 5173 deja occupe (fallback 5174).
+	9. npm run test -> echec (script test absent), hors DoD FE-009.
+	10. git -C frontend show --name-only cccfc6a -> confirme le lot FE-009.
+	11. git -C frontend diff --name-status cccfc6a..HEAD -> aucun ecart (fichiers FE-009 inchanges).
+- Resultats observes:
+	- Lint/typecheck/build restent executables, mais la chaine npm n'est pas "sans warning" sur ce poste.
+	- L'erreur Node persistante est reproductible sur install/build/verify/dev.
+- Cause racine de l'erreur Node:
+	- Runtime local = Node 22.11.0, inferieur au prerequis outillage (Vite/plugin React: >=22.12.0 ou >=20.19.0).
+	- Le ticket FE-009 documente bien le prerequis (.nvmrc=22.12.0 + README), mais l'environnement local n'est pas aligne.
+- Decision de perimetre:
+	- IN-SCOPE FE-009 (le ticket couvre explicitement stabilisation npm + prerequis Node/npm).
+	- Nature du blocage: environnement d'execution local non conforme, pas regression du code FE-009.
+- Impact DoD:
+	- DoD #1: OK.
+	- DoD #2: NOK sur ce poste (warning Node persistant durant build/verify).
+	- DoD #3: Partiel (documentation OK, runtime local non coherent).
+	- DoD #4: OK.
+- Prochaine action recommandee:
+	- Correctif immediat: aligner le runtime local sur Node 22.12.0+ (ou 22.13+) puis relancer npm ci et npm run verify.
+	- Ticket dedie recommande: ajouter une garde d'environnement (package.json engines + script de controle preflight) pour prevenir la recurrence multi-postes.
 Fichiers modifies (lot FE-009):
 - frontend/healthai-admin/src/api/client.ts
 - frontend/healthai-admin/src/components/layout/Sidebar.tsx
@@ -708,7 +741,7 @@ Preuves d'execution:
 ### BE-006
 ID: BE-006
 Titre: Exposer un endpoint Audit admin consolide
-**Statut: TODO**
+**Statut: BACKLOG**
 Il manque quoi et pourquoi: Il manque /admin/audit car l'ecran audit frontend existe mais l'API est absente.
 Description: Construire un flux audit minimal depuis les traces SQL existantes sans creer de nouvelle table.
 Critere sujet/grille concerne: Tracabilite des actions et auditabilite.
@@ -751,7 +784,7 @@ Priorite (P0/P1/P2/P3): P2
 Faisabilite (Haute/Moyenne/Faible): Haute
 Dependances: BE-004, BE-005, BE-006
 
-## Hors Scope a geler
+## Hors Scope a geler ( BACKLOG )
 
 ### HS-001
 ID: HS-001
@@ -802,7 +835,7 @@ Risque si conserve tel quel: KPI invente, perte de credibilite metier.
 | API securisee changement mot de passe | Oui | Suffisant | Corrige (DONE BE-002) | N/A | Gap traite | BE-002 |
 | API profils utilisateurs operationnelle | Oui | Suffisant (user_ + user_health_goal) | Corrige (DONE BE-003) | N/A | Gap traite | BE-003 |
 | Deploiement backend reproductible | Oui | Suffisant | Corrige (DONE BE-001) | N/A | Gap traite | BE-001 |
-| Hygiene npm frontend (lint/build) | Oui | N/A | N/A | Traite (DONE FE-009) | Front only | FE-009 |
+| Hygiene npm frontend (lint/build) | Oui | N/A | N/A | BLOCKED (revalidation 2026-04-05: Node local 22.11.0 < prerequis outillage) | Front only | FE-009 |
 | Audit des actions admin | Oui | Partiel mais exploitable | Absent | Pret | Back only | BE-006 |
 | OpenAPI exploitable | Oui | N/A | Partiel | N/A | Back only | BE-007 |
 | Restitution d'erreurs UI (Login + ecrans proteges) | Oui | N/A | Suffisant (messages metier presents) | ON GOING (regression constatee au 2026-04-04) | Front only | FE-005, FE-006, FE-007, FE-008 |
@@ -814,8 +847,9 @@ Risque si conserve tel quel: KPI invente, perte de credibilite metier.
 
 ## Synthese chiffree (ajouts FE/BE/HS)
 - Nombre total de tickets FE: 9
-- Tickets FE DONE: 2 (FE-002, FE-009)
+- Tickets FE DONE: 1 (FE-002)
 - Tickets FE ON GOING: 4 (FE-005 a FE-008)
+- Tickets FE BLOCKED: 1 (FE-009)
 - Tickets FE TODO: 3 (FE-001, FE-003, FE-004)
 - Nombre total de tickets BE: 7
 - Tickets BE DONE: 5 (BE-001 a BE-005)
