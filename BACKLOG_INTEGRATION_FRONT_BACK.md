@@ -89,7 +89,7 @@ Dépendances / blocages: Aucun
 ### INT-FB-004
 ID: INT-FB-004
 Titre: Connecter le monitoring Pipeline ETL au backend SQL
-**Statut: TODO**
+**Statut: ON GOING**
 Description: Exposer l’historique des runs ETL pour PipelinePage via etl_execution + data_source.
 Il manque quoi et pourquoi: Il manque l’endpoint pipeline car le Front s’appuie encore sur pipelineMock.
 Impact évaluation (critère de grille concerné): Visualisation des flux d’ingestion, traçabilité des exécutions.
@@ -198,7 +198,7 @@ Blocages éventuels:
 ### INT-FB-008
 ID: INT-FB-008
 Titre: Compléter l’intégration Analytics Nutrition + Biométrique
-**Statut: TODO**
+**Statut: DONE**
 Description: Ajouter les flux Front+Back manquants pour les analyses nutritionnelles et biométriques demandées par le sujet.
 Il manque quoi et pourquoi: Il manque les routes UI et endpoints API nutrition/biométrique car seuls business et fitness sont branchés.
 Impact évaluation (critère de grille concerné): Analyses nutritionnelles et biométriques, visualisation métier complète.
@@ -234,7 +234,7 @@ Dépendances / blocages: INT-FB-005, INT-FB-006
 ### INT-FB-010
 ID: INT-FB-010
 Titre: Finaliser la bascule globale Mock vers API réelle en Docker
-**Statut: TODO**
+**Statut: ON GOING**
 Description: Fermer la bascule d’intégration pour que les services Front utilisent l’API réelle en exécution standard et que les nouveaux endpoints soient documentés.
 Il manque quoi et pourquoi: Il manque une bascule de production explicite car USE_MOCK reste vrai par défaut et masque les écarts d’intégration.
 Impact évaluation (critère de grille concerné): Démonstration bout-en-bout DB → API → UI, API documentée et exploitable.
@@ -371,7 +371,7 @@ Dependances: Aucune
 ### FE-005
 ID: FE-005
 Titre: Fiabiliser la restitution d'erreur UI sur Auth et ecrans proteges
-**Statut: ON GOING**
+**Statut: DONE**
 Il manque quoi et pourquoi: Il manque une strategie front unifiee de restitution d'erreur (query, mutation, auth/session) car plusieurs flux affichent des messages generiques ou silencieux.
 Description: Creer un ticket parent de convergence pour structurer le traitement des erreurs visibles utilisateur sur Login, Data et Admin. Classification constatee: Frontend-only majoritaire (messages backend presents), avec verification integration front-back sur les statuts HTTP.
 Critere sujet/grille concerne: API REST securisee et exploitable cote interface d'administration (retours erreurs comprehensibles en demonstration).
@@ -414,7 +414,7 @@ Preuves d'investigation:
 ### FE-006
 ID: FE-006
 Titre: Rendre les erreurs Login actionnables (401/500/reseau)
-**Statut: ON GOING**
+**Statut: DONE**
 Il manque quoi et pourquoi: Il manque un mapping UX explicite pour les erreurs de connexion car la page Login repose sur err.message brut, ce qui produit des retours techniques peu exploitables en cas d'indisponibilite backend.
 Description: Completer la restitution d'erreur du formulaire Login avec messages clairs et orientees action utilisateur (reessayer, verifier identifiants, contacter admin).
 Critere sujet/grille concerne: Authentification securisee et utilisable en demonstration (retour d'erreur compréhensible).
@@ -447,7 +447,7 @@ Preuves d'execution:
 ### FE-007
 ID: FE-007
 Titre: Rendre explicite token invalide/session expiree sur parcours protege
-**Statut: ON GOING**
+**Statut: DONE**
 Il manque quoi et pourquoi: Il manque un feedback utilisateur avant/apres redirection login sur 401 car le client API redirige actuellement de facon silencieuse.
 Description: Introduire une restitution explicite des erreurs de session (token invalide, token expire) pour que l'utilisateur comprenne la cause de la deconnexion sur les pages protegees.
 Critere sujet/grille concerne: Securite d'acces par session + experience d'administration robuste.
@@ -764,7 +764,7 @@ Dependances: BE-001
 ### BE-007
 ID: BE-007
 Titre: Completer la documentation OpenAPI des routes reelles
-**Statut: TODO**
+**Statut: ON GOING**
 Il manque quoi et pourquoi: Il manque une documentation OpenAPI fiable car la spec actuelle est partielle et peu exploitable pour les contrats.
 Description: Mettre a jour la generation Swagger pour couvrir routes, params, schemas reponse et statuts des endpoints livres.
 Critere sujet/grille concerne: API REST documentee via OpenAPI.
@@ -784,7 +784,7 @@ Priorite (P0/P1/P2/P3): P2
 Faisabilite (Haute/Moyenne/Faible): Haute
 Dependances: BE-004, BE-005, BE-006
 
-## Hors Scope a geler ( BACKLOG )
+## Hors Scope a geler
 
 ### HS-001
 ID: HS-001
@@ -835,10 +835,10 @@ Risque si conserve tel quel: KPI invente, perte de credibilite metier.
 | API securisee changement mot de passe | Oui | Suffisant | Corrige (DONE BE-002) | N/A | Gap traite | BE-002 |
 | API profils utilisateurs operationnelle | Oui | Suffisant (user_ + user_health_goal) | Corrige (DONE BE-003) | N/A | Gap traite | BE-003 |
 | Deploiement backend reproductible | Oui | Suffisant | Corrige (DONE BE-001) | N/A | Gap traite | BE-001 |
-| Hygiene npm frontend (lint/build) | Oui | N/A | N/A | BLOCKED (revalidation 2026-04-05: Node local 22.11.0 < prerequis outillage) | Front only | FE-009 |
+| Hygiene npm frontend (lint/build) | Oui | N/A | N/A | ON GOING (lint/build OK, warning Node local 22.11.0 < prerequis Vite >=22.12) | Front only | FE-009 |
 | Audit des actions admin | Oui | Partiel mais exploitable | Absent | Pret | Back only | BE-006 |
 | OpenAPI exploitable | Oui | N/A | Partiel | N/A | Back only | BE-007 |
-| Restitution d'erreurs UI (Login + ecrans proteges) | Oui | N/A | Suffisant (messages metier presents) | ON GOING (regression constatee au 2026-04-04) | Front only | FE-005, FE-006, FE-007, FE-008 |
+| Restitution d'erreurs UI (Login + ecrans proteges) | Oui | N/A | Suffisant (messages metier presents) | ON GOING (FE-005/006/007 done, FE-008 partiel) | Front only | FE-005, FE-006, FE-007, FE-008 |
 
 ## Non retenu (contexte insuffisant)
 - Persistage backend des regles de configuration (ConfigPage): non retenu en ticket dedie car le schema SQL courant ne contient pas de tables de configuration explicites.
@@ -847,14 +847,13 @@ Risque si conserve tel quel: KPI invente, perte de credibilite metier.
 
 ## Synthese chiffree (ajouts FE/BE/HS)
 - Nombre total de tickets FE: 9
-- Tickets FE DONE: 1 (FE-002)
-- Tickets FE ON GOING: 4 (FE-005 a FE-008)
-- Tickets FE BLOCKED: 1 (FE-009)
+- Tickets FE DONE: 4 (FE-002, FE-005, FE-006, FE-007)
+- Tickets FE ON GOING: 2 (FE-008, FE-009)
 - Tickets FE TODO: 3 (FE-001, FE-003, FE-004)
 - Nombre total de tickets BE: 7
 - Tickets BE DONE: 5 (BE-001 a BE-005)
-- Tickets BE ON GOING: 0
-- Tickets BE TODO: 2 (BE-006, BE-007)
+- Tickets BE ON GOING: 1 (BE-007)
+- Tickets BE TODO: 1 (BE-006)
 - Nombre total Hors Scope: 3
 - Tickets HS TODO: 3 (HS-001, HS-002, HS-003)
 - Charge totale estimee (heures): 100
