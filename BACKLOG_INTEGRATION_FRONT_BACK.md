@@ -71,7 +71,7 @@ Dépendances / blocages: Aucun
 ### INT-FB-003
 ID: INT-FB-003
 Titre: Brancher Data Quality sur les contrôles SQL réels
-**Statut: TODO**
+**Statut: DONE**
 Description: Alimenter DataQualityPage depuis data_quality_check_ et non depuis dataQualityMock.
 Il manque quoi et pourquoi: Il manque un endpoint Data Quality car la page lit encore une source simulée.
 Impact évaluation (critère de grille concerné): Suivi qualité des données, visualisation des indicateurs de qualité.
@@ -85,6 +85,61 @@ Estimation IA agent (heures): 10
 Priorité: P0
 Faisabilité: Haute
 Dépendances / blocages: Aucun
+Date de démarrage: 2026-04-09
+Date de réalisation: 2026-04-09
+Temps réel passé (heures): 4.6
+Statut détaillé: TODO -> DONE (endpoint backend livré + intégration frontend réelle + validations statiques/runtime)
+Règle RBAC appliquée: alignement Front/Back sur DATA_ROLES = ADMIN, PREMIUM_PLUS.
+Décision de contrat API: GET /data-quality/score?range=7d|30d|90d|all retourne { overall, dimensions, history } sous data.
+Fichiers modifiés:
+- BACKLOG_INTEGRATION_FRONT_BACK.md
+- backend/app.js
+- backend/controllers/analyticsController/businessKpi.controller.js
+- backend/middlewares/auth.middleware.js
+- backend/routes/analytics.route.js
+- backend/services/analyticsService/businessKpi.service.js
+- frontend/healthai-admin/src/features/data-quality/DataQualityPage.tsx
+- frontend/healthai-admin/src/routes/index.tsx
+- frontend/healthai-admin/src/services/data-quality.service.ts
+- audit/data-quality-summary.md
+- audit/logs/frontend-build.log
+- audit/logs/backend-build.log
+- audit/logs/backend-runtime.log
+- audit/logs/backend-curl.log
+Preuves d'exécution:
+- Source de vérité SQL vérifiée:
+	- database/01_initdb.sql: table data_quality_check_ (check_type, records_checked, records_failed, checked_at, target_table).
+	- database/02_seed.sql: seed de checks (null_check, range_check, duplicate_check) reliés aux executions ETL.
+- Backend (statique):
+	- cd backend
+	- node -v -> v22.11.0
+	- npm ci -> succès
+	- npm run lint -> script absent (skip contrôlé via npm run lint || true)
+- Frontend (statique):
+	- cd frontend/healthai-admin
+	- node -v -> v22.11.0
+	- npm ci -> succès (warnings EBADENGINE attendus sur poste local)
+	- npm run typecheck -> succès
+	- npm run lint -> succès
+	- npm run build -> succès (warning Vite: Node 22.11.0 < 22.12 recommandé)
+- Runtime Docker:
+	- docker compose up -d --build db backend -> database healthy + backend started
+- API runtime (auth + RBAC + payload):
+	- POST /auth/login (PREMIUM_PLUS claire.leroy@email.com) -> HTTP 200, token émis
+	- GET /data-quality/score?range=30d (PREMIUM_PLUS) -> HTTP 200, success=true, data.overall/dimensions/history présents
+	- GET /data-quality/score?range=all (PREMIUM_PLUS) -> HTTP 200, dimensions calculées (duplicate_check, null_check, range_check)
+	- POST /auth/login (PREMIUM alice.martin@email.com) -> HTTP 200, token émis
+	- GET /data-quality/score?range=30d (PREMIUM) -> HTTP 403, message "Accès non autorisé pour ce rôle"
+- Intégration Front réelle:
+	- data-quality.service.ts appelle /data-quality/score via apiClient, sans fallback mock.
+	- DataQualityPage utilise React Query en loading/error/success et consomme le contrat API normalisé.
+Commits:
+- backend: 5baa96d (feat/INT-FB-003-dataquality-20260409)
+- frontend: 29fabdc (feat/INT-FB-003-dataquality-20260409)
+- main (backlog + audit + pointeurs submodules): à capturer après commit local du repo principal
+Blocages éventuels:
+- Aucun blocage fonctionnel.
+- Point d'attention environnement: warning Node 22.11.0 avec Vite 7 (prérequis >=22.12) sur ce poste local.
 
 ### INT-FB-004
 ID: INT-FB-004
