@@ -53,12 +53,12 @@ Blocages éventuels:
 ### INT-FB-002
 ID: INT-FB-002
 Titre: Connecter le Dashboard principal à une API réelle
-**Statut: TODO**
+**Statut: DONE**
 Description: Remplacer la source mock du Dashboard par une agrégation Backend basée sur les tables SQL existantes.
 Il manque quoi et pourquoi: Il manque un endpoint Dashboard car la page consomme encore des mocks par défaut.
 Impact évaluation (critère de grille concerné): Interface web + dashboard interactif, API REST exploitable par le Front.
 Périmètre impacté (au moins 1 fichier Front + 1 fichier Back): Front [frontend/healthai-admin/src/services/dashboard.service.ts](frontend/healthai-admin/src/services/dashboard.service.ts), [frontend/healthai-admin/src/features/dashboard/DashboardPage.tsx](frontend/healthai-admin/src/features/dashboard/DashboardPage.tsx) ; Back [backend/routes/analytics.route.js](backend/routes/analytics.route.js), [backend/controllers/analyticsController/businessKpi.controller.js](backend/controllers/analyticsController/businessKpi.controller.js), [backend/services/analyticsService/businessKpi.service.js](backend/services/analyticsService/businessKpi.service.js), [backend/app.js](backend/app.js)
-Données DB concernées (tables/champs): login_history.last_login, login_history.user_id, etl_execution.started_at, etl_execution.status, etl_execution.records_extracted, etl_execution.records_loaded, data_source.source_name, data_quality_check_.records_failed, data_quality_check_.records_checked, data_anomaly.detected_at, data_anomaly.is_resolved
+Données DB concernées (tables/champs): login_history.last_login, login_history.user_id, workout_session.start_at, etl_execution.started_at, etl_execution.status, etl_execution.records_loaded, data_quality_check_.check_type, data_quality_check_.records_failed, data_quality_check_.records_checked, data_anomaly.detected_at, data_anomaly.is_resolved, data_anomaly.check_id
 Critères d’acceptation (Definition of Done):
 1. GET /dashboard retourne un payload compatible avec les KPIs et séries de la page Dashboard.
 2. La page Dashboard charge les données réelles sans fallback mock en environnement Docker.
@@ -67,6 +67,65 @@ Estimation IA agent (heures): 12
 Priorité: P0
 Faisabilité: Haute
 Dépendances / blocages: Aucun
+Date de démarrage: 2026-04-11
+Date de réalisation: 2026-04-11
+Temps réel passé (heures): 3.3
+Statut détaillé: ON GOING -> DONE (endpoint /dashboard livré + suppression mock Dashboard + RBAC aligné + validations statiques/runtime)
+Règle RBAC appliquée: Dashboard Front et Back alignés sur ANALYTICS_ROLES/ROLE_GROUPS.ANALYTICS = ADMIN, PREMIUM, PREMIUM_PLUS, B2B.
+Décision métrique non calculable: apiCallsMonth/temps de réponse API n'est pas traqué en DB actuelle. Neutralisation explicite en UI et substitution par KPI Activity Events 30j (login_history + workout_session).
+Fichiers modifiés:
+- BACKLOG_INTEGRATION_FRONT_BACK.md
+- SYSTEME_TICKETING_AUDIT_4_STRATES.md
+- .env.example
+- docker-compose.yml
+- backend/app.js
+- backend/controllers/analyticsController/businessKpi.controller.js
+- backend/routes/analytics.route.js
+- backend/services/analyticsService/businessKpi.service.js
+- frontend/Dockerfile
+- frontend/healthai-admin/src/features/dashboard/DashboardPage.tsx
+- frontend/healthai-admin/src/lib/env.ts
+- frontend/healthai-admin/src/lib/nav.constants.ts
+- frontend/healthai-admin/src/mocks/data.ts
+- frontend/healthai-admin/src/routes/index.tsx
+- frontend/healthai-admin/src/services/dashboard.service.ts
+Preuves d'exécution:
+- Source de vérité SQL vérifiée:
+	- database/01_initdb.sql: tables utilisées existantes (login_history, etl_execution, data_quality_check_, data_anomaly, workout_session) ; aucune table data_source/colonne triggered_by.
+	- database/02_seed.sql: données exploitables pour /dashboard (ETL, checks qualité, anomalies, historique de login, sessions workout).
+- Backend (statique):
+	- cd backend
+	- npm ci -> succès
+	- npm run lint -> script absent (non disponible)
+	- npm run build -> script absent (non disponible)
+- Frontend (statique):
+	- cd frontend/healthai-admin
+	- npm ci -> succès (warnings EBADENGINE connus)
+	- npm run typecheck -> succès
+	- npm run lint -> succès
+	- npm run build -> succès (warning Node 22.11.0 < 22.12 recommandé par Vite)
+- Runtime Docker:
+	- docker compose up -d --build db backend -> database healthy + backend started
+- API runtime (preuves curl):
+	- Login PREMIUM (alice.martin@email.com) + GET /dashboard -> HTTP 200, success=true, payload avec kpis(6), userActivity(30), anomalyTrend(12)
+	- Login FREEMIUM (bob.dupont@email.com) + GET /dashboard -> HTTP 403, message "Accès non autorisé pour ce rôle"
+- Intégration front réelle:
+	- dashboard.service.ts n'utilise plus de mock et normalise les réponses enveloppées { success, data }.
+	- DashboardPage affiche un message explicite si /dashboard est absent (404) et conserve loading/error states.
+	- env.ts passe en mode mock opt-in (VITE_USE_MOCKS=true uniquement).
+Blocages éventuels:
+- Aucun blocage fonctionnel.
+- Point d'attention environnement: warning Vite sur Node 22.11.0 (version recommandée >= 22.12).
+Mise a jour complementaire (2026-04-11, finalisation production):
+- Filtre datetime dashboard aligne sur les autres ecrans: support `range=all|7d|30d|90d` de bout en bout (UI -> service -> API -> SQL).
+- Nettoyage des messages de contextualisation technique dans l'UI dashboard (copie finale production-ready).
+- Enrichissement du seed SQL pour activite recente (logins/sessions/anomalies) afin d'eviter des graphes vides sur petites fenetres.
+- Validation API multi-ranges:
+	- RANGE=all -> KPI=6, UA=434, DQ=464, ING=104, AT=464
+	- RANGE=7d -> KPI=6, UA=7, DQ=7, ING=5, AT=7
+	- RANGE=30d -> KPI=6, UA=30, DQ=30, ING=29, AT=30
+	- RANGE=90d -> KPI=6, UA=90, DQ=90, ING=67, AT=90
+	- RBAC (FREEMIUM) -> 403 sur /dashboard?range=30d
 
 ### INT-FB-003
 ID: INT-FB-003
