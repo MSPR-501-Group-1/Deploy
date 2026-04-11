@@ -58,7 +58,6 @@ services:
     volumes:
       - ./etl/data:/app/data
       - ./etl/logs:/app/logs
-      - shared_csv:/data/processed
     depends_on:
       db:
         condition: service_healthy
@@ -100,7 +99,7 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - shared_csv:/data/processed
+      - ./etl/data/processed:/data/processed
     depends_on:
       db:
         condition: service_healthy
@@ -168,7 +167,6 @@ services:
 # ─────────────────────────────────────────
 volumes:
   pgdata:
-  shared_csv:
 
 
 networks:
