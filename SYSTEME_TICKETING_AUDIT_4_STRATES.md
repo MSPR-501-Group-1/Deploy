@@ -178,7 +178,7 @@ Execution 2026-04-11:
 ### MSPR-BE-002
 ID: MSPR-BE-002
 Titre: Implementer endpoints Anomalies reels
-Statut: TODO
+Statut: DONE
 Priorite: P0
 Faisabilite: Haute
 Description: Le front cible /anomalies et /anomalies/:id/correct, routes absentes.
@@ -191,6 +191,22 @@ Definition of Done:
 1. GET /anomalies retourne une liste typed compatible front.
 2. PATCH /anomalies/:id/correct persiste is_resolved + resolution_action.
 3. Rechargement UI montre la correction persistante.
+Execution demarree 2026-04-11:
+- Date de debut: 2026-04-11.
+Execution 2026-04-11:
+- Date de fin: 2026-04-11.
+- Temps reel: 4.6h.
+- Preuves implementation: endpoints reels livres (`GET /anomalies`, `PATCH /anomalies/:id/correct`) avec separation controller/service/repository + SQL centralise dans `backend/repositories/dataAnomaly.repository.js`.
+- RBAC aligne front/back: acces anomalies reserve a `ADMIN` et `PREMIUM_PLUS` (frontend `DATA_ROLES`, backend `ROLE_GROUPS.DATA_QUALITY`).
+- Filtre optionnel `organization_id`: applique uniquement aux anomalies `source_table=user_metrics` via jointure `user_metrics -> user_organization` (pas de mapping organisation fiable pour les autres sources dans le schema actuel).
+- Journalisation correction: action loggee via `login_history` dans la meme transaction SQL que l'update anomalie (pas de table audit dediee disponible).
+- Recommandation DB: ajouter une table d'audit dediee corrections anomalies (`anomaly_id`, `resolved_by`, `resolved_at`, `resolution_action`) pour tracabilite complete.
+- Fichiers modifies: `backend/app.js`; `backend/routes/analytics.route.js`; `backend/controllers/analyticsController/dataAnomaly.controller.js`; `backend/services/analyticsService/dataAnomaly.service.js`; `backend/repositories/dataAnomaly.repository.js`; `frontend/healthai-admin/src/services/anomalies.service.ts`; `frontend/healthai-admin/src/features/anomalies/AnomaliesPage.tsx`; `frontend/healthai-admin/src/components/anomalies/CorrectionDialog.tsx`; `audit/logs/mspr-be-002-anomalies-2026-04-11.md`; `SYSTEME_TICKETING_AUDIT_4_STRATES.md`.
+- Commandes: `cd backend && npm ci && npm run swagger`; `cd frontend/healthai-admin && npm ci && npm run typecheck && npm run lint && npm run build`; `docker compose up -d --build db backend`; tests API via `Invoke-RestMethod`.
+- Extrait preuve auth + correction (ADMIN): {"adminLoginSuccess":true,"adminRole":"ADMIN","openCount":1,"correctedAnomalyId":"ANO_002","patchResolved":true,"patchAction":"Confirmed data issue","resolvedCount":3}.
+- Extrait preuve persistance post-correction: {"openIds":[],"openTotal":0,"resolvedIds":["ANO_003","ANO_002","ANO_001"],"resolvedTotal":3}.
+- Extrait preuve RBAC: FREEMIUM -> `GET /anomalies` => 403 ; PREMIUM_PLUS -> `GET /anomalies` => 200.
+- Log d'execution detaille: `audit/logs/mspr-be-002-anomalies-2026-04-11.md`.
 
 ### MSPR-BE-003
 ID: MSPR-BE-003
@@ -276,6 +292,26 @@ Definition of Done:
 1. GET /etl/etlExecutions requiert auth + role coherent.
 2. Le front gere proprement 401/403.
 3. Aucun endpoint ETL sensible non protege.
+
+### MSPR-INT-005
+ID: MSPR-INT-005
+Titre: Remediation profonde vs Isolation des anomalies actives
+Statut: TODO
+Priorite: P0
+Faisabilite: Moyenne
+Description: Actuellement, une ligne en etat d'anomalie (ouverte ou faussement "resolue" par un simple clic) reste presente en l'etat dans sa source (ex: user_metrics avec une valeur negative) et pollue silencieusement tous les calculs analytiques et KPIs du dashboard.
+Il manque quoi et pourquoi: La correction d'une anomalie en l'etat est cosmetique. Il faut une veritable remediation pereine : le dashboard NE DOIT PAS utiliser des donnees avec une anomalie ouverte, et la "resolution" doit permettre de corriger physiquement la valeur en base (ou confirmer qu'elle est ignoree).
+Impact evaluation (critere jury): Fiabilite absolue des calculs BI (Data Engineering & Trust).
+Perimetre impacte: 
+- Base de donnees: creation de SQL Views (ex: `vw_qualified_user_metrics`) excluant les lignes liees a une `data_anomaly` ouverte.
+- Backend KPI: migration des requetes `.service` vers ces Vues qualifiees au lieu des tables brutes.
+- Backend Anomalies: le PATCH de resolution doit accepter la nouvelle valeur corrigee et l'UPDATE dynamiquement dans la `source_table`.
+Donnees DB concernees: Toutes requetes analytiques (utiliser une jointure `LEFT JOIN data_anomaly ... WHERE ... is null`).
+Dependances: MSPR-BE-001, MSPR-BE-002
+Definition of Done:
+1. Les KPIs (dashboard) calculent uniquement sur la donnee "propre" (vues filtrees des anomalies ouvertes).
+2. Le backend expose un endpoint permettant de soumettre une valeur de remplacement `{"correctedValues": { "heart_rate": 80 }}` lors de la resolution de l'anomalie.
+3. Le patch met a jour physiquement (UPDATE) la table source (ex: `user_metrics`) en plus de cloturer l'anomalie.
 
 ---
 
@@ -366,6 +402,23 @@ Definition of Done:
 2. Aucun user autorise UI ne subit un 403 inattendu sur parcours nominal.
 3. Comportement 403 reste explicite pour roles non autorises.
 
+### MSPR-INT-004
+ID: MSPR-INT-004
+Titre: Enrichir le cycle de vie des anomalies (Statuts complets et Assignation)
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le workflow d'anomalies actuel est binaire (Ouvert / Résolu). Il faut un cycle plus riche (En cours, Investigation, Faux positif) et pouvoir assigner un membre de l'équipe Data.
+Il manque quoi et pourquoi: Un cas fonctionnel concret pour distribuer le travail de remédiation, indispensable pour une vraie équipe Data Quality.
+Impact evaluation (critere jury): Richesse fonctionnelle et adherence a un workflow ITSM realiste.
+Perimetre impacte: database (alter table), backend/services/analyticsService (logique statuts), frontend/healthai-admin (UI de modification).
+Donnees DB concernees: data_anomaly (ajout champs status, assignee_id).
+Dependances: MSPR-BE-002
+Definition of Done:
+1. Enum de statuts (OPEN, INVESTIGATING, BLOCKED, FALSE_POSITIVE, RESOLVED) implemente.
+2. Possibilite d'assigner un utilisateur (assignee_id) a l'anomalie.
+3. Frontend UI mis a jour pour afficher et gerer ces nouveaux etats.
+
 ---
 
 ## 4.3 P2 - Industrialisation
@@ -420,6 +473,44 @@ Definition of Done:
 1. Documentation strictement alignee avec le code execute.
 2. Runbook docker valide en temps contraint.
 3. Matrice exigence -> preuve mise a jour.
+
+### MSPR-ETL-004
+ID: MSPR-ETL-004
+Titre: Mise en quarantaine (DLQ) et rejeu des donnees en erreur
+Statut: BACKLOG
+Priorite: P2
+Faisabilite: Faible
+Description: Actuellement, on flag une anomalie, mais la donnee brute concernee n'est pas stockee de maniere isolee pour etre corrigee puis rejouee (pattern Dead Letter Queue).
+Il manque quoi et pourquoi: La veritable remediation de donnees, standard de l'industrie pour ne pas perdre la donnee lors des echecs de validation ETL.
+Impact evaluation (critere jury): Industrialisation avancee et integrite totale des flux.
+Perimetre impacte: etl (route rejets vers DLQ), backend (endpoint de rejeu).
+Donnees DB concernees: creation schema/table dedie dlq_records.
+Dependances: Aucune
+Definition of Done:
+1. L'ETL pousse les lignes non conformes dans une table DLQ specifique avec leur motif de rejet.
+2. Un endpoint backend permet de re-soumettre/rejouer un batch de la DLQ dans l'ETL.
+3. Documentation de l'architecture de remediation ajoutee.
+
+---
+
+## 4.4 P3 - Optimisation Architecturale
+
+### MSPR-ARCH-001
+ID: MSPR-ARCH-001
+Titre: Decouplage evenementiel de l'ingestion des anomalies
+Statut: BACKLOG
+Priorite: P3
+Faisabilite: Faible
+Description: L'ETL insere en SQL principal (OLTP) de maniere synchrone lors des controles, risquant de saturer la base de donnees transactionnelle lors de gros batchs en erreur.
+Il manque quoi et pourquoi: Une architecture asynchrone (Broker de messages / Pub-Sub) pour proteger la performance du backend metier face aux pics d'anomalies.
+Impact evaluation (critere jury): Capacite de montee en charge massive (Scalability) et resilience.
+Perimetre impacte: etl (publisher), backend (worker/consumer), architecture docker (broker).
+Donnees DB concernees: data_anomaly.
+Dependances: Aucune
+Definition of Done:
+1. Ajout d'un broker leger (ex: redis streams ou RabbitMQ) dans docker-compose.
+2. L'ETL delegue la tracabilite en publiant des evenements.
+3. Un worker (microservice ou backend task) batch et integre ces messages en asynchrone.
 
 ---
 
