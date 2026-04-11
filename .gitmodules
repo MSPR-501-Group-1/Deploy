@@ -1,12 +1,16 @@
 [submodule "backend"]
 	path = backend
 	url = https://github.com/MSPR-501-Group-1/backend.git
+	branch = main
 [submodule "frontend"]
 	path = frontend
 	url = https://github.com/MSPR-501-Group-1/frontend.git
+	branch = main
 [submodule "etl"]
 	path = etl
 	url = https://github.com/MSPR-501-Group-1/etl.git
+	branch = main
 [submodule "database"]
 	path = database
 	url = https://github.com/MSPR-501-Group-1/Database.git
+	branch = main
