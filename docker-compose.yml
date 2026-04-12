@@ -96,6 +96,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-admin}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
       JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
+      ETL_API_URL: ${ETL_API_URL:-http://etl:8000}
     ports:
       - "3000:3000"
     volumes:

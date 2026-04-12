@@ -476,20 +476,32 @@ Definition of Done:
 
 ### MSPR-ETL-004
 ID: MSPR-ETL-004
-Titre: Mise en quarantaine (DLQ) et rejeu des donnees en erreur
-Statut: BACKLOG
-Priorite: P2
-Faisabilite: Faible
-Description: Actuellement, on flag une anomalie, mais la donnee brute concernee n'est pas stockee de maniere isolee pour etre corrigee puis rejouee (pattern Dead Letter Queue).
-Il manque quoi et pourquoi: La veritable remediation de donnees, standard de l'industrie pour ne pas perdre la donnee lors des echecs de validation ETL.
-Impact evaluation (critere jury): Industrialisation avancee et integrite totale des flux.
-Perimetre impacte: etl (route rejets vers DLQ), backend (endpoint de rejeu).
-Donnees DB concernees: creation schema/table dedie dlq_records.
+Titre: Mise en quarantaine (DLQ) via volume partage CSV et rejeu
+Statut: DONE
+Priorite: P1
+Faisabilite: Haute
+Description: Actuellement, on flag une anomalie, mais la donnee brute concernee n'est pas stockee de maniere isolee pour etre corrigee puis rejouee (pattern Dead Letter Queue). L'approche retenue est d'utiliser un volume Docker partage (stockage de fichiers CSV) comme "base de donnees temporaire" entre l'ETL et le Backend.
+Il manque quoi et pourquoi: La veritable remediation de donnees, standard de l'industrie pour ne pas perdre la donnee lors des echecs de validation ETL. Utiliser un volume partage CSV est un excellent compromis technique pour une implementation rapide et perenne à cette echelle.
+Impact evaluation (critere jury): Industrialisation avancee, pragmatisme et integrite totale des flux.
+Perimetre impacte: 
+- docker-compose: s'assurer du montage du volume entre etl (output quarantaine) et backend (lecture/modification).
+- etl (ecriture des rejets en CSV dans le volume partage).
+- backend (endpoint de modification du CSV et relance du rejeu).
+Donnees DB concernees: Aucune nouvelle table necessaire. Le CSV agit comme BDD temporaire (DLQ as a File).
 Dependances: Aucune
 Definition of Done:
-1. L'ETL pousse les lignes non conformes dans une table DLQ specifique avec leur motif de rejet.
-2. Un endpoint backend permet de re-soumettre/rejouer un batch de la DLQ dans l'ETL.
-3. Documentation de l'architecture de remediation ajoutee.
+1. L'ETL pousse les lignes non conformes dans un fichier CSV (DLQ) situe sur le volume partage (`/data/processed` ou similiaire).
+2. Le backend peut editer la ligne en anomalie directement dans le fichier CSV via un endpoint (ou valider sa correction).
+3. L'ETL est capable de processer a nouveau ce fichier "corrige".
+Execution 2026-04-12:
+- Date de fin: 2026-04-12.
+- Temps reel: 4.2h.
+- Implementation ETL: `etl/utils/data_quality.py` ecrit les anomalies rejetees en CSV DLQ dans `/app/data/processed/dlq`; `etl/utils/dlq.py` ajoute le rejeu UPSERT des lignes corrigees; nouvelle route FastAPI `POST /api/dlq/replay/{source_table}/{execution_id}`.
+- Implementation backend: `backend/services/analyticsService/dlqCsv.service.js` edite la ligne anomalie dans le CSV partage; `PATCH /anomalies/:id/correct` accepte `corrected_value` + `replay_now` et declenche le rejeu ETL.
+- Runtime docker: backend recoit `ETL_API_URL` dans `docker-compose.yml` (defaut `http://etl:8000`) pour les appels de rejeu.
+- Frontend: dialogue correction enrichi avec champ "Valeur corrigee" et envoi vers API.
+- Commandes de validation: `docker compose up -d --build db etl backend frontend`; tests API via `Invoke-RestMethod`.
+- Preuve E2E (fixture controlee): correction `ANO_DQL_TEST_001` -> replay DLQ retourne `replayed=1 failed=0`; verification SQL `data_anomaly.is_resolved=true`; verification SQL `ingredient.ING_001.calories_g=42.42`; verification CSV DLQ `corrected_value=42.42`, `replay_status=replayed`, `replayed_at` renseigne.
 
 ---
 
