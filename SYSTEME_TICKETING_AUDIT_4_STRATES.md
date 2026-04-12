@@ -26,6 +26,9 @@ Format ID:
 - MSPR-BE-XXX (backend)
 - MSPR-FE-XXX (frontend)
 - MSPR-INT-XXX (integration front-back-etl)
+- MSPR-DATA-XXX (jeu de donnees consolide)
+- MSPR-OPS-XXX (deploiement/exploitation)
+- MSPR-MGT-XXX (pilotage/soutenance)
 - MSPR-DOC-XXX (documentation)
 - MSPR-QA-XXX (tests/qualite)
 
@@ -552,6 +555,214 @@ Definition of Done:
 
 ---
 
+## 4.5 P1/P2 - Livrables TRE501 (incluant non technique)
+
+### MSPR-DOC-002
+ID: MSPR-DOC-002
+Titre: Produire l'inventaire des sources de donnees et regles de qualite
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #1 exige un rapport d'inventaire complet des sources internes/externes.
+Il manque quoi et pourquoi: Les sources sont eparpillees dans le code et les scripts, sans vue unique preuvee.
+Impact evaluation (critere jury): Documentation des donnees et flux defendable devant jury.
+Perimetre impacte: README racine, etl/README.md, database/README.md, dossier audit/logs.
+Donnees DB concernees: N/A (metadonnees de sources).
+Dependances: Aucune
+Definition of Done:
+1. Tableau des sources (origine, format, frequence, proprietaire) complete.
+2. Regles de qualite appliquees par source documentees avec lien vers code.
+3. Version PDF/Markdown archivee avec date et auteur.
+
+### MSPR-DOC-003
+ID: MSPR-DOC-003
+Titre: Livrer le diagramme des flux de donnees bout-en-bout
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #1 impose la visualisation du flux complet collecte -> nettoyage -> stockage -> API.
+Il manque quoi et pourquoi: Aucun schema unique versionne ne couvre ETL + DB + Backend + Frontend.
+Impact evaluation (critere jury): Clarte architecture et maitrise des flux.
+Perimetre impacte: documentation/architecture, README racine, support soutenance.
+Donnees DB concernees: tables ETL et analytics (etl_execution, data_quality_check_, data_anomaly, tables metier).
+Dependances: MSPR-DOC-002
+Definition of Done:
+1. Diagramme maintenable (Mermaid ou draw.io) stocke dans le repo.
+2. Flux critiques et points de controle qualite explicites.
+3. Correspondance avec routes API et jobs ETL verifiee.
+
+### MSPR-ETL-005
+ID: MSPR-ETL-005
+Titre: Industrialiser la planification ETL (cron/equivalent) avec preuve d'execution
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le livrable TRE501 #2 exige des scripts de planification/configuration d'execution.
+Il manque quoi et pourquoi: Le pipeline est declenchable mais pas encore package avec une planification standard tracee.
+Impact evaluation (critere jury): ETL operationnel, automatisable et reproductible.
+Perimetre impacte: etl/main.py, scripts/, docker-compose.yml, documentation execution.
+Donnees DB concernees: etl_execution.
+Dependances: MSPR-ETL-001
+Definition of Done:
+1. Mecanisme planifie documente (cron, scheduler ou equivalent Docker).
+2. Procedure de relance et reprise sur erreur decrite.
+3. Journal horodate de 3 executions consecutives archive.
+
+### MSPR-QA-002
+ID: MSPR-QA-002
+Titre: Standardiser le dossier de preuves logs/erreurs par execution ETL
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #2 demande un systeme de gestion des erreurs et logs retraçant chaque execution.
+Il manque quoi et pourquoi: Les preuves existent mais ne suivent pas encore un format unique auditable.
+Impact evaluation (critere jury): Auditabilite et tracabilite des runs ETL.
+Perimetre impacte: audit/logs, etl/logs, template de compte-rendu execution.
+Donnees DB concernees: etl_execution, data_quality_check_, data_anomaly.
+Dependances: MSPR-ETL-005
+Definition of Done:
+1. Template unique de log de run adopte (inputs, outputs, erreurs, duree, statut).
+2. Chaque run ETL de demo possede un fichier preuve associe.
+3. Verification croisee logs fichier <-> etat DB documentee.
+
+### MSPR-DATA-001
+ID: MSPR-DATA-001
+Titre: Constituer le dataset consolide de reference pour evaluation
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le livrable TRE501 #3 exige un jeu de donnees nettoye et exploitable comme reference.
+Il manque quoi et pourquoi: La sortie ETL existe mais le dataset de reference jury n'est pas fige/versionne comme artefact officiel.
+Impact evaluation (critere jury): Qualite data objectivable et base future IA.
+Perimetre impacte: etl/data/processed, scripts de generation, documentation dataset.
+Donnees DB concernees: ingredient, exercise, user_metrics (+ vues qualifiees si MSPR-INT-005).
+Dependances: MSPR-ETL-002, MSPR-INT-005
+Definition of Done:
+1. Dataset de reference versionne (tag/date/hash) produit apres nettoyage.
+2. Dictionnaire des champs et regles de construction fourni.
+3. Echantillons de validation qualite annexes (avant/apres anomalies).
+
+### MSPR-DB-003
+ID: MSPR-DB-003
+Titre: Fournir modelisation Merise/UML et scripts SQL de migration versionnes
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le livrable TRE501 #4 impose un modele relationnel documente (MCD/MLD/MPD ou UML) et scripts de creation/migration.
+Il manque quoi et pourquoi: Le schema SQL existe mais la modelisation formelle et la strategie migration ne sont pas completees pour jury.
+Impact evaluation (critere jury): Structure de donnees perenne, versionnee, reproductible.
+Perimetre impacte: database/01_initdb.sql, database/02_seed.sql, dossier documentation/schema.
+Donnees DB concernees: ensemble du modele relationnel.
+Dependances: MSPR-DB-001, MSPR-DB-002
+Definition of Done:
+1. Diagrammes MCD/MLD/MPD (ou UML equivalent) livres et synchronises avec SQL.
+2. Strategie de migration incrementalement versionnee definie.
+3. Deploiement from scratch + migration valide en environnement propre.
+
+### MSPR-BE-006
+ID: MSPR-BE-006
+Titre: Couvrir exhaustivement le perimetre API REST attendu par TRE501
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le livrable TRE501 #5 exige une API REST securisee, testee, documentee (CRUD users, alimentation, exercices, metriques).
+Il manque quoi et pourquoi: Plusieurs routes critiques sont partielles ou heterogenes selon domaines.
+Impact evaluation (critere jury): Exhaustivite fonctionnelle API et adoption front/partenaires.
+Perimetre impacte: backend/routes, backend/controllers, backend/services, schemas validation, swagger-output.json.
+Donnees DB concernees: users, nutrition/ingredient, exercises, user_metrics.
+Dependances: MSPR-BE-005
+Definition of Done:
+1. CRUD minimal complet et coherent sur domaines imposes.
+2. RBAC et validation payload appliques sur chaque route exposee.
+3. OpenAPI synchronisee + tests contrats passes.
+
+### MSPR-FE-002
+ID: MSPR-FE-002
+Titre: Atteindre RGAA AA sur le socle interface admin et dashboard
+Statut: TODO
+Priorite: P1
+Faisabilite: Moyenne
+Description: Le livrable TRE501 #6 fait du respect accessibilite (RGAA niveau AA) un critere determinant.
+Il manque quoi et pourquoi: Les ecrans principaux existent, mais la preuve de conformite RGAA AA n'est pas consolidee.
+Impact evaluation (critere jury): Qualite UX inclusive et conformite reglementaire.
+Perimetre impacte: frontend/healthai-admin/src/features/*, composants partages, lighthouse/a11y-batch-reports.
+Donnees DB concernees: N/A
+Dependances: MSPR-INT-001, MSPR-BE-001, MSPR-BE-002
+Definition of Done:
+1. Audit a11y des parcours critiques (login, dashboard, anomalies, pipeline) execute.
+2. Corrections clavier, contrastes, labels, annonces erreurs appliquees.
+3. Rapport de conformite RGAA AA (ecarts restants + plan de correction) livre.
+
+### MSPR-DOC-004
+ID: MSPR-DOC-004
+Titre: Rediger le rapport technique 5-8 pages conforme TRE501
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #7 exige un rapport technique structurant le contexte, choix, resultats, difficultes et perspectives.
+Il manque quoi et pourquoi: Les informations sont presentes dans plusieurs docs mais pas assemblees en document de reference unique 5-8 pages.
+Impact evaluation (critere jury): Capacite de formalisation, justification technique et reprise projet.
+Perimetre impacte: documentation/, README, audit/logs, artefacts architecture.
+Donnees DB concernees: N/A
+Dependances: MSPR-DOC-002, MSPR-DOC-003, MSPR-BE-005
+Definition of Done:
+1. Rapport complet 5-8 pages valide par binome.
+2. Section difficultes/risques/perspectives factuelle et argumentee.
+3. Annexes avec preuves techniques majeures referees.
+
+### MSPR-OPS-001
+ID: MSPR-OPS-001
+Titre: Finaliser le guide de deploiement executable en moins de 30 minutes
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #7 impose un guide de deploiement reproductible (Docker/Compose/env/prerequis).
+Il manque quoi et pourquoi: Les commandes existent mais le runbook time-boxe et valide n'est pas formalise bout-en-bout.
+Impact evaluation (critere jury): Reproductibilite et fiabilite de mise en oeuvre.
+Perimetre impacte: README.md, backend/README.md, frontend/README.md, etl/README.md, docker-compose.yml, .env.example.
+Donnees DB concernees: initdb/seed.
+Dependances: MSPR-ETL-001, MSPR-INT-002
+Definition of Done:
+1. Procedure pas-a-pas unique et chronometree (<30 min) ecrite.
+2. Verification sur machine propre (nouvel environnement) documentee.
+3. Checklist post-deploiement (healthchecks + endpoints cles) fournie.
+
+### MSPR-MGT-001
+ID: MSPR-MGT-001
+Titre: Construire le support de soutenance technique client
+Statut: TODO
+Priorite: P1
+Faisabilite: Haute
+Description: Le livrable TRE501 #8 exige un support synthetique de presentation pour public technique.
+Il manque quoi et pourquoi: Les elements existent mais pas encore structures en narration claire de soutenance.
+Impact evaluation (critere jury): Capacite a valoriser le travail et convaincre sur la maitrise technique.
+Perimetre impacte: support soutenance (slides), artefacts demo, captures ecran preuves.
+Donnees DB concernees: N/A
+Dependances: MSPR-DOC-004, MSPR-OPS-001
+Definition of Done:
+1. Support complet (demarche, problemes, solutions, resultats, perspectives) pret.
+2. Liens entre slides et preuves techniques explicites.
+3. Version orale 15-20 min repetable sans improvisation.
+
+### MSPR-MGT-002
+ID: MSPR-MGT-002
+Titre: Organiser repetition soutenance et registre Q/R jury
+Statut: BACKLOG
+Priorite: P2
+Faisabilite: Haute
+Description: La soutenance est co-evaluee avec les livrables; une repetition structuree reduit les risques de contre-performance.
+Il manque quoi et pourquoi: Pas encore de simulation complete chronometree ni de banque de questions/reponses.
+Impact evaluation (critere jury): Qualite de communication, justification des choix, gestion des objections.
+Perimetre impacte: organisation equipe, preparation orale, dossier preuves.
+Donnees DB concernees: N/A
+Dependances: MSPR-MGT-001
+Definition of Done:
+1. Au moins 2 repetitions chronometrees realisees avec feedback formalise.
+2. Registre Q/R (architecture, securite, data quality, ROI) complete.
+3. Plan de reponse par intervenant stabilise.
+
+---
+
 ## 5) Gouvernance execution (cadence)
 
 - Daily 15 min: triage P0/P1 + blocages.
@@ -585,13 +796,38 @@ Sprint 3 (industrialisation):
 2. MSPR-QA-001
 3. MSPR-DOC-001
 
+Sprint 4 (livrables jury et non-tech):
+1. MSPR-DOC-002
+2. MSPR-DOC-003
+3. MSPR-DATA-001
+4. MSPR-DB-003
+5. MSPR-BE-006
+6. MSPR-FE-002
+7. MSPR-DOC-004
+8. MSPR-OPS-001
+9. MSPR-MGT-001
+10. MSPR-MGT-002
+
 ---
 
 ## 7) Note importante sur la conformite sujet/grille
 
-Les pieces officielles sujet/grille n'etant pas exploitables en texte dans le workspace au moment de l'audit, ce systeme est base sur:
-- le code execute,
-- les contrats reels front-back-etl-db,
-- les ecarts verifies en runtime/documentation technique.
+Reference de verite appliquee au 2026-04-12:
+- livrables TRE501 #1 a #8 (documentation donnees/flux, ETL operationnel, dataset nettoye, base relationnelle, API REST OpenAPI, interface + dashboard RGAA AA, rapport + guide deploiement, support soutenance),
+- code execute et contrats reels front-back-etl-db,
+- preuves runtime et traces documentaires.
 
-Des reception des pieces officielles, ajouter une colonne "Critere grille exact" par ticket pour verrouiller la tracabilite jury.
+Regle de tracabilite: chaque ticket doit indiquer explicitement le numero de livrable TRE501 couvre, puis fournir une preuve de cloture exploitable en soutenance.
+
+---
+
+## 8) Matrice de couverture livrables TRE501 -> tickets
+
+1. Livrable 1 (Documentation donnees et flux): MSPR-DOC-002, MSPR-DOC-003
+2. Livrable 2 (Pipelines ETL operationnels): MSPR-ETL-001, MSPR-ETL-005, MSPR-QA-002, MSPR-ETL-003
+3. Livrable 3 (Jeux de donnees nettoyes): MSPR-DATA-001, MSPR-INT-005, MSPR-ETL-004
+4. Livrable 4 (Base relationnelle + scripts): MSPR-DB-001, MSPR-DB-002, MSPR-DB-003
+5. Livrable 5 (API REST documentee): MSPR-BE-001, MSPR-BE-002, MSPR-BE-003, MSPR-BE-004, MSPR-BE-005, MSPR-BE-006
+6. Livrable 6 (Interface + dashboard + RGAA AA): MSPR-INT-001, MSPR-INT-002, MSPR-FE-001, MSPR-FE-002
+7. Livrable 7 (Rapport technique + guide deploiement): MSPR-DOC-004, MSPR-OPS-001, MSPR-DOC-001
+8. Livrable 8 (Support de soutenance): MSPR-MGT-001, MSPR-MGT-002
