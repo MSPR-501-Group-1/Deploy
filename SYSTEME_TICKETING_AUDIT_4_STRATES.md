@@ -228,7 +228,7 @@ Definition of Done:
 ### MSPR-ETL-001
 ID: MSPR-ETL-001
 Titre: Brancher ETL_API_URL dans backend compose
-Statut: TODO
+Statut: DONE
 Priorite: P0
 Faisabilite: Haute
 Description: etl.service.js depend de ETL_API_URL non fourni dans docker-compose backend.
@@ -241,6 +241,15 @@ Definition of Done:
 1. ETL_API_URL est injecte en runtime backend.
 2. POST /etl/:pipeline fonctionne en docker.
 3. POST /etl/validate/:id fonctionne sans variable manquante.
+Execution 2026-04-12:
+- Date de fin: 2026-04-12.
+- Temps reel: 0.8h.
+- Preuves implementation: ETL_API_URL est injecte dans le service backend de docker-compose et defini dans .env.example; etl.service.js consomme process.env.ETL_API_URL avec fallback sur http://etl:8000.
+- Validation runtime Docker:
+	- docker compose exec -T backend sh -lc 'echo $ETL_API_URL' -> http://etl:8000.
+	- Auth ADMIN + POST /etl/exercises -> success=true, executionId=a010298f-f9ce-4b0b-832b-c6cdb4568d80, status=transformed.
+	- POST /etl/validate/a010298f-f9ce-4b0b-832b-c6cdb4568d80 (pipeline=exercises) -> success=true, returnedStatus=loaded.
+- Log d'execution detaille: audit/logs/mspr-etl-001-2026-04-12.md.
 
 ### MSPR-ETL-002
 ID: MSPR-ETL-002
@@ -262,7 +271,7 @@ Definition of Done:
 ### MSPR-INT-002
 ID: MSPR-INT-002
 Titre: Reparer export CSV pipeline bout-en-bout
-Statut: TODO
+Statut: DONE
 Priorite: P0
 Faisabilite: Moyenne
 Description: Le front genere /api/files/... mais les chemins/volumes ETL-back ne sont pas alignes.
@@ -275,6 +284,23 @@ Definition of Done:
 1. Un run ETL genere un CSV telechargeable depuis UI.
 2. Le nommage fichier/type est coherent front/back/etl.
 3. Test manuel valide sur nutrition + exercises.
+Execution 2026-04-12:
+- Date de fin: 2026-04-12.
+- Temps reel: 1.6h.
+- Preuves implementation:
+	- Backend: route `GET /api/files/:type/:filename` active et service fichiers mappe les pipelines vers les entites ETL (`exercises -> exercise`, `nutrition -> ingredient`) dans `backend/services/filesService/files.service.js`.
+	- Docker: volume partage ETL -> backend confirme (`./etl/data/processed:/data/processed`) dans `docker-compose.yml`.
+	- Frontend: nom de fichier telecharge aligne avec le nom ETL/backend (`ingredient_<executionId>.csv` ou `exercise_<executionId>.csv`) dans `frontend/healthai-admin/src/features/data/PipelinePage.tsx` et `frontend/healthai-admin/src/services/pipeline.service.ts`.
+- Validation runtime Docker:
+	- Exercises: POST `/etl/exercises` -> success=true, executionId=1f54a520-e198-46cf-b561-7a57a5e42eb7, status=transformed.
+	- Download exercises: GET backend `/api/files/exercises/1f54a520-e198-46cf-b561-7a57a5e42eb7` -> 200 (502394 bytes) ; GET frontend `/api/files/exercises/1f54a520-e198-46cf-b561-7a57a5e42eb7` -> 200 (502394 bytes).
+	- Nutrition: POST `/etl/nutrition` -> success=true, executionId=6d71f7ad-260d-4d6b-8a52-350c59a0a087, status=transformed.
+	- Download nutrition: GET backend `/api/files/nutrition/6d71f7ad-260d-4d6b-8a52-350c59a0a087` -> 200 (999834 bytes) ; GET frontend `/api/files/nutrition/6d71f7ad-260d-4d6b-8a52-350c59a0a087` -> 200 (999834 bytes).
+- Qualite front:
+	- `npm run typecheck` -> succes.
+	- `npm run lint` -> succes.
+	- `npm run build` -> succes (warning version Node locale 22.11.0 < 22.12 recommande par Vite).
+- Log d'execution detaille: `audit/logs/mspr-int-002-2026-04-12.md`.
 
 ### MSPR-BE-004
 ID: MSPR-BE-004
