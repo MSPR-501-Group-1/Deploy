@@ -645,7 +645,7 @@ Definition of Done:
 ### MSPR-DB-003
 ID: MSPR-DB-003
 Titre: Fournir modelisation Merise/UML et scripts SQL de migration versionnes
-Statut: TODO
+Statut: DONE
 Priorite: P1
 Faisabilite: Moyenne
 Description: Le livrable TRE501 #4 impose un modele relationnel documente (MCD/MLD/MPD ou UML) et scripts de creation/migration.
