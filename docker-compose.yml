@@ -11,17 +11,15 @@ services:
     env_file:
       - ./.env
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-health_app}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-    ports:
-      - "5432:5432"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
       - ./database/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
       - ./database/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-health_app}" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -47,14 +45,12 @@ services:
     environment:
       DB_HOST: db
       DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB:-health_app}
-      DB_USER: ${POSTGRES_USER:-admin}
-      DB_PASSWORD: ${POSTGRES_PASSWORD:-secret}
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
       SPARK_MASTER: local[*]
       KAGGLE_USERNAME: ${KAGGLE_USERNAME}
       KAGGLE_KEY: ${KAGGLE_API_TOKEN}
-    ports:
-      - "8000:8000"
     volumes:
       - ./etl/data:/app/data
       - ./etl/logs:/app/logs
@@ -92,13 +88,11 @@ services:
       PORT: 3000
       POSTGRES_HOST: db
       POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB:-health_app}
-      POSTGRES_USER: ${POSTGRES_USER:-admin}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
-      JWT_SECRET: ${JWT_SECRET:-changeme_in_production}
-      ETL_API_URL: ${ETL_API_URL:-http://etl:8000}
-    ports:
-      - "3000:3000"
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ETL_API_URL: ${ETL_API_URL}
     volumes:
       - ./etl/data/processed:/data/processed
     depends_on:
@@ -133,8 +127,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
-        VITE_USE_MOCKS: ${VITE_USE_MOCKS:-false}
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL}
+        VITE_USE_MOCKS: ${VITE_USE_MOCKS}
     container_name: frontend
     restart: unless-stopped
     init: true
@@ -168,7 +162,6 @@ services:
 # ─────────────────────────────────────────
 volumes:
   pgdata:
-
 
 networks:
   internal:
