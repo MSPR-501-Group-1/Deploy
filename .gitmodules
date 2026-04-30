@@ -14,3 +14,6 @@
 	path = database
 	url = https://github.com/MSPR-501-Group-1/Database.git
 	branch = main
+[submodule "ia-nutrition-recommendation"]
+	path = ia-nutrition-recommendation
+	url = https://github.com/MSPR-501-Group-1/ia-nutrition-recommendation.git
