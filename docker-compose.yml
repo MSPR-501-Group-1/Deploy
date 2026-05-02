@@ -15,8 +15,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - ./database/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
-      - ./database/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ./database-main/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
+      - ./database-main/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
@@ -34,7 +34,7 @@ services:
   # ─────────────────────────────────────────
   etl:
     build:
-      context: ./etl
+      context: ./data-etl
       dockerfile: Dockerfile
     container_name: etl
     restart: on-failure
@@ -52,8 +52,8 @@ services:
       KAGGLE_USERNAME: ${KAGGLE_USERNAME}
       KAGGLE_KEY: ${KAGGLE_API_TOKEN}
     volumes:
-      - ./etl/data:/app/data
-      - ./etl/logs:/app/logs
+      - ./data-etl/data:/app/data
+      - ./data-etl/logs:/app/logs
     depends_on:
       db:
         condition: service_healthy
@@ -77,7 +77,7 @@ services:
   # ─────────────────────────────────────────
   backend:
     build:
-      context: ./backend
+      context: ./backend-main
       dockerfile: Dockerfile
     container_name: backend
     restart: unless-stopped
@@ -95,7 +95,7 @@ services:
       JWT_SECRET: ${JWT_SECRET}
       ETL_API_URL: ${ETL_API_URL}
     volumes:
-      - ./etl/data/processed:/data/processed
+      - ./data-etl/data/processed:/data/processed
     depends_on:
       db:
         condition: service_healthy
@@ -125,7 +125,7 @@ services:
   # ─────────────────────────────────────────
   frontend:
     build:
-      context: ./frontend
+      context: ./frontend-admin-dashboard
       dockerfile: Dockerfile
       args:
         VITE_API_BASE_URL: ${VITE_API_BASE_URL}

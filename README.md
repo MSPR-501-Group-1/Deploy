@@ -2,10 +2,10 @@
 
 Depot d'orchestration du projet MSPR. Ce repository reference les sous-projets via submodules Git:
 
-- backend
-- frontend
-- etl
-- database
+- backend-main
+- frontend-admin-dashboard
+- data-etl
+- database-main
 
 ## Prerequis
 
@@ -20,8 +20,8 @@ Depot d'orchestration du projet MSPR. Ce repository reference les sous-projets v
 4. Lancer les services.
 
 ```bash
-git clone --recurse-submodules https://github.com/MSPR-501-Group-1/main.git
-cd main
+git clone --recurse-submodules https://github.com/MSPR-501-Group-1/health-ai.git
+cd health-ai
 
 # Bash
 cp .env.example .env
@@ -34,7 +34,7 @@ docker compose up --build
 
 ## Services exposes
 
-- Frontend: http://localhost:5173
+Frontend admin: http://localhost:5173
 - Backend API: http://localhost:3000
 - Backend healthcheck: http://localhost:3000/health
 - ETL API: http://localhost:8000
@@ -60,10 +60,10 @@ Exemple pour une feature qui touche backend + frontend.
 1. Creer une branche dans chaque submodule.
 
 ```bash
-cd backend
+cd backend-main
 git checkout -b feature/login
 
-cd ../frontend
+cd ../frontend-admin-dashboard
 git checkout -b feature/login
 ```
 
@@ -78,14 +78,14 @@ git push origin feature/login
 ```bash
 cd ..
 git checkout -b feature/login
-git add backend frontend
+git add backend-main frontend-admin-dashboard
 git commit -m "update submodules for feature/login"
 git push origin feature/login
 ```
 
 ## Documentation par composant
 
-- backend/README.md
-- frontend/README.md
-- etl/README.md
-- database/README.md
+- backend-main/README.md
+- frontend-admin-dashboard/README.md
+- data-etl/README.md
+- database-main/README.md
