@@ -1,19 +1,16 @@
-[submodule "backend"]
-	path = backend
-	url = https://github.com/MSPR-501-Group-1/backend.git
+[submodule "backend-main"]
+	path = backend-main
+	url = https://github.com/MSPR-501-Group-1/backend-main.git
 	branch = main
-[submodule "frontend"]
-	path = frontend
-	url = https://github.com/MSPR-501-Group-1/frontend.git
+[submodule "frontend-admin-dashboard"]
+	path = frontend-admin-dashboard
+	url = https://github.com/MSPR-501-Group-1/frontend-admin-dashboard.git
 	branch = main
-[submodule "etl"]
-	path = etl
-	url = https://github.com/MSPR-501-Group-1/etl.git
+[submodule "data-etl"]
+	path = data-etl
+	url = https://github.com/MSPR-501-Group-1/data-etl.git
 	branch = main
-[submodule "database"]
-	path = database
-	url = https://github.com/MSPR-501-Group-1/Database.git
+[submodule "database-main"]
+	path = database-main
+	url = https://github.com/MSPR-501-Group-1/database-main.git
 	branch = main
-[submodule "ia-nutrition-recommendation"]
-	path = ia-nutrition-recommendation
-	url = https://github.com/MSPR-501-Group-1/ia-nutrition-recommendation.git
