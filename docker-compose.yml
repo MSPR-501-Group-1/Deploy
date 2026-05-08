@@ -3,9 +3,9 @@ services:
   # ─────────────────────────────────────────
   #  BASE DE DONNÉES PostgreSQL
   # ─────────────────────────────────────────
-  db:
+  db-main:
     image: postgres:16-alpine
-    container_name: database
+    container_name: database-main
     restart: unless-stopped
     init: true
     env_file:
@@ -29,6 +29,31 @@ services:
     networks:
       - internal
 
+  db-nut-reco:
+    image: mongodb/mongodb-community-server:8.0-ubi8
+    container_name: database-nutrition-recommendation
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: healthai_nutrition_recommendation
+    volumes:
+      - ./mongodb/init.js:/docker-entrypoint-initdb.d/01_init.js:ro
+      - mongodb_data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/healthai_nutrition_recommendation --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - internal
+
   # ─────────────────────────────────────────
   #  ETL Python
   # ─────────────────────────────────────────
@@ -43,7 +68,7 @@ services:
     env_file:
       - ./.env
     environment:
-      DB_HOST: db
+      DB_HOST: db-main
       DB_PORT: 5432
       DB_NAME: ${POSTGRES_DB}
       DB_USER: ${POSTGRES_USER}
@@ -55,7 +80,7 @@ services:
       - ./data-etl/data:/app/data
       - ./data-etl/logs:/app/logs
     depends_on:
-      db:
+      db-main:
         condition: service_healthy
     cap_drop:
       - ALL
@@ -87,7 +112,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-production}
       PORT: 3000
-      POSTGRES_HOST: db
+      POSTGRES_HOST: db-main
       POSTGRES_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
@@ -97,7 +122,7 @@ services:
     volumes:
       - ./data-etl/data/processed:/data/processed
     depends_on:
-      db:
+      db-main:
         condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "curl -fsS http://127.0.0.1:3000/health || exit 1" ]
@@ -163,6 +188,7 @@ services:
 # ─────────────────────────────────────────
 volumes:
   pgdata:
+  mongodb_data:
 
 networks:
   internal:
