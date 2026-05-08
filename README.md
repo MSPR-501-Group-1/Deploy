@@ -73,6 +73,30 @@ git checkout -b feature/login
 git push origin feature/login
 ```
 
+## Ajouter / supprimer un submodule
+
+Nomenclature conseillee:
+
+- Repo distant: nom officiel GitHub (ex: backend-main)
+- Dossier local: meme nom que le repo (ex: backend-main)
+- Branch: main
+
+Ajouter un submodule:
+
+```bash
+git submodule add -b main https://github.com/MSPR-501-Group-1/<repo>.git <dossier>
+git submodule sync
+git submodule update --init --recursive
+```
+
+Supprimer un submodule:
+
+```bash
+git submodule deinit -f <dossier>
+git rm -f <dossier>
+git submodule sync
+```
+
 3. Revenir a la racine main et mettre a jour les pointeurs de submodules.
 
 ```bash
