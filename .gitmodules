@@ -22,3 +22,7 @@
 	path = frontend-user-social
 	url = https://github.com/MSPR-501-Group-1/frontend-user-social.git
 	branch = main
+[submodule "frontend-user-coaching"]
+	path = frontend-user-coaching
+	url = https://github.com/MSPR-501-Group-1/frontend-user-coaching.git
+	branch = main
