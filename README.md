@@ -20,8 +20,8 @@ Depot d'orchestration du projet MSPR. Ce repository reference les sous-projets v
 4. Lancer les services.
 
 ```bash
-git clone --recurse-submodules https://github.com/MSPR-501-Group-1/health-ai.git
-cd health-ai
+git clone --recurse-submodules https://github.com/MSPR-501-Group-1/Main.git
+cd Main
 
 # Bash
 cp .env.example .env
