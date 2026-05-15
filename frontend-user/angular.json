@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "frontend-user-social": {
+    "frontend-user": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -26,12 +26,7 @@
             ],
             "styles": [
               "src/styles.css"
-            ],
-            "server": "src/main.server.ts",
-            "outputMode": "server",
-            "ssr": {
-              "entry": "src/server.ts"
-            }
+            ]
           },
           "configurations": {
             "production": {
@@ -61,10 +56,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "frontend-user-social:build:production"
+              "buildTarget": "frontend-user:build:production"
             },
             "development": {
-              "buildTarget": "frontend-user-social:build:development"
+              "buildTarget": "frontend-user:build:development"
             }
           },
           "defaultConfiguration": "development"
