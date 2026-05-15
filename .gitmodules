@@ -18,3 +18,7 @@
 	path = database-nutrition-recommendation
 	url = https://github.com/MSPR-501-Group-1/database-nutrition-recommendation.git
 	branch = main
+[submodule "frontend-user-social"]
+	path = frontend-user-social
+	url = https://github.com/MSPR-501-Group-1/frontend-user-social.git
+	branch = main
