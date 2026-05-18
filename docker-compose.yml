@@ -111,6 +111,10 @@ services:
     container_name: ia-workout-recommendation
     restart: unless-stopped
     init: true
+    # TODO : Faut dégager le port quand on passera en prod (à la fin).
+    # -> On appele le service depuis le backend (réseau interne docker)
+    ports:
+      - "8001:8001"
     env_file:
       - ./.env
     healthcheck:
