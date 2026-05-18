@@ -26,3 +26,9 @@
 	path = frontend-user-coaching
 	url = https://github.com/MSPR-501-Group-1/frontend-user-coaching.git
 	branch = main
+[submodule "ia-workout-recommendation"]
+	path = ia-workout-recommendation
+	url = https://github.com/MSPR-501-Group-1/ia-workout-recommendation
+[submodule "ia-nutrition-recommendation"]
+	path = ia-nutrition-recommendation
+	url = https://github.com/MSPR-501-Group-1/ia-nutrition-recommendation
