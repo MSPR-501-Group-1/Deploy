@@ -186,6 +186,40 @@ services:
           memory: 64M
     networks:
       - external
+# ─────────────────────────────────────────
+#  FRONTEND User-Coaching (Angular)
+# ─────────────────────────────────────────
+  frontend-user-coaching:
+    build:
+      context: ./frontend-user-coaching
+      dockerfile: Dockerfile
+    container_name: frontend-user-coaching
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8081:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          memory: 64M
+    networks:
+      - external
 
 # ─────────────────────────────────────────
 #  VOLUMES & RÉSEAUX
