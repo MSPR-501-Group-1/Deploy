@@ -102,6 +102,39 @@ services:
       - external
 
   # ─────────────────────────────────────────
+  #  IA WORKOUT RECOMMENDATION Python
+  # ─────────────────────────────────────────
+  ia-workout-recommendation:
+    build:
+      context: ./ia-workout-recommendation
+      dockerfile: Dockerfile
+    container_name: ia-workout-recommendation
+    restart: unless-stopped
+    init: true
+    env_file:
+      - ./.env
+    healthcheck:
+      test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://127.0.0.1:8001/docs', timeout=5)\" || exit 1" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1G
+        reservations:
+          memory: 512M
+    networks:
+      - internal
+      - external
+
+  # ─────────────────────────────────────────
   #  BACKEND Node.js
   # ─────────────────────────────────────────
   backend:
