@@ -148,6 +148,8 @@ services:
     container_name: backend
     restart: unless-stopped
     init: true
+    ports:
+      - "3000:3000"
     env_file:
       - ./.env
     environment:
