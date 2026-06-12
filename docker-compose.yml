@@ -268,9 +268,10 @@ services:
           memory: 64M
     networks:
       - external
-# ─────────────────────────────────────────
-#  FRONTEND User-Coaching (Angular)
-# ─────────────────────────────────────────
+
+  # ─────────────────────────────────────────
+  #  FRONTEND User-Coaching (Angular)
+  # ─────────────────────────────────────────
   frontend-user-coaching:
     build:
       context: ./frontend-user-coaching
@@ -303,12 +304,121 @@ services:
     networks:
       - external
 
+  # ═════════════════════════════════════════════════════════════════════════
+  #  OBSERVABILITÉ — Prometheus / Loki / Promtail / Tempo / Grafana
+  # ═════════════════════════════════════════════════════════════════════════
+
+  # ─────────────────────────────────────────
+  #  PROMETHEUS — métriques
+  # ─────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    restart: unless-stopped
+    init: true
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-remote-write-receiver'   # requis pour les métriques générées par Tempo
+      - '--enable-feature=exemplar-storage'    # liens métriques -> traces (exemplars)
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
+  #  LOKI — logs
+  # ─────────────────────────────────────────
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    init: true
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./observability/loki/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki_data:/loki
+    command: -config.file=/etc/loki/loki-config.yaml
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
+  #  PROMTAIL — collecte auto des logs de TOUS les conteneurs
+  # ─────────────────────────────────────────
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    init: true
+    volumes:
+      - ./observability/promtail/promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail_data:/tmp
+    command: -config.file=/etc/promtail/config.yaml
+    depends_on:
+      - loki
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
+  #  TEMPO — traces (épinglé 2.6.1 : pas de dépendance Kafka/Redpanda)
+  # ─────────────────────────────────────────
+  tempo:
+    image: grafana/tempo:2.6.1
+    container_name: tempo
+    restart: unless-stopped
+    init: true
+    ports:
+      - "3200:3200"   # API HTTP Tempo
+      - "4317:4317"   # OTLP gRPC  (réception des traces)
+      - "4318:4318"   # OTLP HTTP
+    volumes:
+      - ./observability/tempo/tempo-config.yaml:/etc/tempo.yaml:ro
+      - tempo_data:/var/tempo
+    command: -config.file=/etc/tempo.yaml
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
+  #  GRAFANA — visualisation unifiée
+  # ─────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    restart: unless-stopped
+    init: true
+    ports:
+      - "3001:3000"   # 3000 est déjà pris par ton backend -> Grafana sur 3001
+    volumes:
+      - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - grafana_data:/var/lib/grafana
+    environment:
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_FEATURE_TOGGLES_ENABLE: "traceqlEditor"
+    depends_on:
+      - prometheus
+      - loki
+      - tempo
+    networks:
+      - internal
+
 # ─────────────────────────────────────────
 #  VOLUMES & RÉSEAUX
 # ─────────────────────────────────────────
 volumes:
   pgdata:
   mongodb_data:
+  prometheus_data:
+  loki_data:
+  promtail_data:
+  tempo_data:
+  grafana_data:
 
 networks:
   internal:
