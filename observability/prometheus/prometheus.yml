@@ -1,0 +1,41 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # ---- Stack d'observabilité elle-même ----
+  - job_name: prometheus
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: grafana
+    static_configs:
+      - targets: ["grafana:3000"]
+
+  - job_name: loki
+    static_configs:
+      - targets: ["loki:3100"]
+
+  - job_name: tempo
+    static_configs:
+      - targets: ["tempo:3200"]
+
+  # ---- Tes services applicatifs ----
+  # ⚠️ Nécessitent un endpoint /metrics exposé par l'application.
+  # Tant qu'il n'existe pas, la cible apparaît "DOWN" dans Prometheus,
+  # ce qui est sans danger : le reste de la stack fonctionne.
+  # (Instrumentation : voir README-observability.md)
+  - job_name: backend
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["backend:3000"]
+
+  - job_name: ia-workout-recommendation
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["ia-workout-recommendation:8001"]
+
+  - job_name: ia-nutrition-recommendation
+    metrics_path: /metrics
+    static_configs:
+      - targets: ["ia-nutrition-recommendation:8002"]
