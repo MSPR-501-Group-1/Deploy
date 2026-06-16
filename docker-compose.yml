@@ -119,6 +119,13 @@ services:
       - "8001:8001"
     env_file:
       - ./.env
+    environment:
+      OTEL_SERVICE_NAME: ia-workout-recommendation
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none       # métriques via /metrics (pull Prometheus)
+      OTEL_LOGS_EXPORTER: none          # coupe l'export de logs qui spamme tes erreurs
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
     healthcheck:
       test: [ "CMD-SHELL", "python -c \"import requests; requests.get('http://127.0.0.1:8001/docs', timeout=5)\" || exit 1" ]
       interval: 30s
@@ -164,6 +171,14 @@ services:
       HUGGINGFACE_API_KEY: ${HUGGINGFACE_API_KEY}
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:14b}
+
+      environment:
+      OTEL_SERVICE_NAME: ia-nutrition-recommendation
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -205,6 +220,15 @@ services:
       MONGO_AUTH_DB: ${MONGO_AUTH_DB}
       JWT_SECRET: ${JWT_SECRET}
       ETL_API_URL: ${ETL_API_URL}
+
+      environment:
+      OTEL_SERVICE_NAME: backend
+      OTEL_TRACES_EXPORTER: otlp
+      OTEL_METRICS_EXPORTER: none
+      OTEL_LOGS_EXPORTER: none
+      OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
+      NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
     volumes:
       - ./data-etl/data/processed:/data/processed
     depends_on:
@@ -396,11 +420,14 @@ services:
       - "3001:3000"   # 3000 est déjà pris par ton backend -> Grafana sur 3001
     volumes:
       - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./observability/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
       - grafana_data:/var/lib/grafana
     environment:
       GF_AUTH_ANONYMOUS_ENABLED: "true"
       GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
       GF_FEATURE_TOGGLES_ENABLE: "traceqlEditor"
+      GF_LOG_FILTERS: "authn.service:error"
     depends_on:
       - prometheus
       - loki
