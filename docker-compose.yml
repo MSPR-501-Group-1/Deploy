@@ -176,6 +176,43 @@ services:
       - external
 
   # ─────────────────────────────────────────
+  #  N8N  (automatisation & backups)
+  # ─────────────────────────────────────────
+  n8n:
+    build:
+      context: .
+      dockerfile: n8n.Dockerfile
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      GENERIC_TIMEZONE: "Europe/Paris"
+      TZ: "Europe/Paris"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_RUNNERS_ENABLED: "true"
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: db-main
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_POSTGRESDB_SCHEMA: n8n
+      N8N_ALLOW_EXEC: "true"
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.backup:/backups
+    depends_on:
+      db-main:
+        condition: service_healthy
+      db-nut-reco:
+        condition: service_started
+    networks:
+      - internal
+      - external
+      
+  # ─────────────────────────────────────────
   #  BACKEND Node.js
   # ─────────────────────────────────────────
   backend:
@@ -309,6 +346,7 @@ services:
 volumes:
   pgdata:
   mongodb_data:
+  n8n_data:
 
 networks:
   internal:
