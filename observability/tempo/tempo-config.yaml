@@ -1,5 +1,5 @@
-# Config Tempo 2.6.x : stockage local (filesystem), réception OTLP,
-# et metrics-generator (service graph + span metrics) renvoyés vers Prometheus.
+# Config Tempo 2.6.x : stockage local, réception OTLP, et metrics-generator
+# avec local-blocks (requis pour les TraceQL metrics du "Drilldown traces").
 
 server:
   http_listen_port: 3200
@@ -20,8 +20,6 @@ compactor:
   compaction:
     block_retention: 24h            # rétention des traces (ajustable)
 
-# Génère des métriques à partir des traces (service map, latences par span)
-# et les envoie à Prometheus via remote_write.
 metrics_generator:
   registry:
     external_labels:
@@ -31,6 +29,13 @@ metrics_generator:
     remote_write:
       - url: http://prometheus:9090/api/v1/write
         send_exemplars: true
+  # Stockage des traces récentes : indispensable au processeur local-blocks
+  traces_storage:
+    path: /var/tempo/generator/traces
+  processor:
+    local_blocks:
+      flush_to_storage: true        # persiste les blocs locaux
+      filter_server_spans: false    # prend en compte TOUS les spans, pas que "server"
 
 storage:
   trace:
@@ -40,8 +45,15 @@ storage:
     local:
       path: /var/tempo/blocks
 
-# Active les processeurs du metrics-generator par défaut pour tous les services.
+# Autorise les TraceQL metrics (Drilldown) sur une fenêtre large
+query_frontend:
+  metrics:
+    max_duration: 24h
+
+# Active les 3 processeurs par défaut pour tous les services :
+#  - service-graphs / span-metrics  -> service map & métriques RED
+#  - local-blocks                   -> TraceQL metrics -> Drilldown traces
 overrides:
   defaults:
     metrics_generator:
-      processors: [service-graphs, span-metrics]
+      processors: [service-graphs, span-metrics, local-blocks]
