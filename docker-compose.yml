@@ -122,8 +122,8 @@ services:
     environment:
       OTEL_SERVICE_NAME: ia-workout-recommendation
       OTEL_TRACES_EXPORTER: otlp
-      OTEL_METRICS_EXPORTER: none       # métriques via /metrics (pull Prometheus)
-      OTEL_LOGS_EXPORTER: none          # coupe l'export de logs qui spamme tes erreurs
+      OTEL_METRICS_EXPORTER: none # métriques via /metrics (pull Prometheus)
+      OTEL_LOGS_EXPORTER: none # coupe l'export de logs qui spamme tes erreurs
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
     healthcheck:
@@ -199,8 +199,8 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "9000:9000"   # API S3
-      - "9001:9001"   # Console web MinIO
+      - "9000:9000" # API S3
+      - "9001:9001" # Console web MinIO
     env_file:
       - ./.env
     environment:
@@ -210,7 +210,7 @@ services:
     volumes:
       - minio_data:/data
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/live" ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -410,8 +410,8 @@ services:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
       - '--storage.tsdb.retention.time=15d'
-      - '--web.enable-remote-write-receiver'   # requis pour les métriques générées par Tempo
-      - '--enable-feature=exemplar-storage'    # liens métriques -> traces (exemplars)
+      - '--web.enable-remote-write-receiver' # requis pour les métriques générées par Tempo
+      - '--enable-feature=exemplar-storage' # liens métriques -> traces (exemplars)
     networks:
       - internal
 
@@ -459,9 +459,9 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "3200:3200"   # API HTTP Tempo
-      - "4317:4317"   # OTLP gRPC  (réception des traces)
-      - "4318:4318"   # OTLP HTTP
+      - "3200:3200" # API HTTP Tempo
+      - "4317:4317" # OTLP gRPC  (réception des traces)
+      - "4318:4318" # OTLP HTTP
     volumes:
       - ./observability/tempo/tempo-config.yaml:/etc/tempo.yaml:ro
       - tempo_data:/var/tempo
@@ -478,7 +478,7 @@ services:
     restart: unless-stopped
     init: true
     ports:
-      - "3001:3000"   # 3000 est déjà pris par ton backend -> Grafana sur 3001
+      - "3001:3000" # 3000 est déjà pris par ton backend -> Grafana sur 3001
     volumes:
       - ./observability/grafana/datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
       - ./observability/grafana/dashboards.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
