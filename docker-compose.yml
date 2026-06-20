@@ -50,7 +50,7 @@ services:
       - ./database-nutrition-recommendation/scripts/seed/seed_v0.js:/seed/seed_v0.js:ro
       - mongodb_data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27018/${MONGO_DB} --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/${MONGO_DB} --quiet
       interval: 10s
       timeout: 5s
       retries: 5
