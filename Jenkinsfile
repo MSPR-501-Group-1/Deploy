@@ -17,8 +17,12 @@ pipeline {
 
         stage('Validation docker-compose') {
             steps {
-                sh 'docker compose -f ${COMPOSE_FILE} config --quiet'
-                sh 'docker compose -f ${COMPOSE_CICD_FILE} config --quiet'
+                sh '''
+                    # Créer un .env vide si absent (CI n'a pas de secrets)
+                    touch .env
+                    docker compose -f ${COMPOSE_FILE} config --quiet
+                    docker compose -f ${COMPOSE_CICD_FILE} config --quiet
+                '''
                 echo "Les deux fichiers docker-compose sont valides"
             }
         }
