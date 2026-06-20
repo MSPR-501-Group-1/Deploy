@@ -50,7 +50,7 @@ services:
       - ./database-nutrition-recommendation/scripts/seed/seed_v0.js:/seed/seed_v0.js:ro
       - mongodb_data:/data/db
     healthcheck:
-      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27018/${MONGO_DB} --quiet
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/${MONGO_DB} --quiet
       interval: 10s
       timeout: 5s
       retries: 5
@@ -191,6 +191,26 @@ services:
       - external
 
   # ─────────────────────────────────────────
+  #  BACKUP CRON
+  # ─────────────────────────────────────────
+  backup-cron:
+    build:
+      context: .
+      dockerfile: backup.Dockerfile
+    container_name: backup-cron
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.backup:/backups
+    depends_on:
+      db-main:
+        condition: service_healthy
+      db-nut-reco:
+        condition: service_started
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
   #  MINIO — Stockage objet S3-compatible
   # ─────────────────────────────────────────
   minio:
@@ -245,6 +265,47 @@ services:
       - internal
 
   # ─────────────────────────────────────────
+  #  N8N  (automatisation & backups)
+  # ─────────────────────────────────────────
+  n8n:
+    build:
+      context: .
+      dockerfile: n8n.Dockerfile
+    container_name: n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      GENERIC_TIMEZONE: "Europe/Paris"
+      TZ: "Europe/Paris"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_RUNNERS_ENABLED: "true"
+      DB_TYPE: postgresdb
+      DB_POSTGRESDB_HOST: db-main
+      DB_POSTGRESDB_PORT: 5432
+      DB_POSTGRESDB_DATABASE: ${POSTGRES_DB}
+      DB_POSTGRESDB_USER: ${POSTGRES_USER}
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
+      DB_POSTGRESDB_SCHEMA: n8n
+      N8N_ALLOW_EXEC: "true"
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_CREDENTIALS_B64: ${N8N_CREDENTIALS_B64:-}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.backup:/backups
+      - ./scripts:/scripts:ro
+      - ./n8n/workflows:/n8n-workflows:ro
+    depends_on:
+      db-main:
+        condition: service_healthy
+      db-nut-reco:
+        condition: service_started
+    networks:
+      - internal
+      - external
+
+  # ─────────────────────────────────────────
   #  BACKEND Node.js
   # ─────────────────────────────────────────
   backend:
@@ -263,6 +324,8 @@ services:
       PORT: 3000
       POSTGRES_HOST: db-main
       POSTGRES_PORT: 5432
+      DB_HOST: db-main
+      DB_PORT: 5432
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -502,6 +565,7 @@ services:
 volumes:
   pgdata:
   mongodb_data:
+  n8n_data:
   prometheus_data:
   loki_data:
   promtail_data:
