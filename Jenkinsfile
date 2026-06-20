@@ -91,7 +91,7 @@ pipeline {
             echo "Pipeline Main : FAILURE (build #${BUILD_NUMBER})"
         }
         always {
-            cleanWs()
+            deleteDir()
         }
     }
 }
