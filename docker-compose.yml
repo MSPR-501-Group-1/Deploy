@@ -19,6 +19,7 @@ services:
     volumes:
       - ./database-main/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
       - ./database-main/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
+      - ./database-main/03_media_pipeline.sql:/docker-entrypoint-initdb.d/03_media_pipeline.sql:ro
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
@@ -233,13 +234,15 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: ${MINIO_BUCKET:-healthai-media}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-raw-uploads}
+      MINIO_BUCKET_PROD: ${MINIO_BUCKET_PROD:-production-medias}
     entrypoint: >
       /bin/sh -c "
         mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
-        mc mb --ignore-existing myminio/$${MINIO_BUCKET};
-        mc anonymous set download myminio/$${MINIO_BUCKET};
-        echo 'MinIO bucket ready';
+        mc mb --ignore-existing myminio/$${MINIO_BUCKET_RAW};
+        mc mb --ignore-existing myminio/$${MINIO_BUCKET_PROD};
+        mc anonymous set download myminio/$${MINIO_BUCKET_PROD};
+        echo 'MinIO buckets ready';
       "
     networks:
       - internal
@@ -286,7 +289,8 @@ services:
       MINIO_USE_SSL: "false"
       MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
       MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: ${MINIO_BUCKET:-healthai-media}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-raw-uploads}
+      MINIO_BUCKET_PROD: ${MINIO_BUCKET_PROD:-production-medias}
       MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
     volumes:
       - ./data-etl/data/processed:/data/processed
