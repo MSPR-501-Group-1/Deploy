@@ -1,0 +1,2 @@
+0 2 * * * sh /scripts/backup-postgres.sh >> /backups/backup.log 2>&1
+0 2 * * * sh /scripts/backup-mongo.sh    >> /backups/backup.log 2>&1

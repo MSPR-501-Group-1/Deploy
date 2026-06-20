@@ -176,6 +176,26 @@ services:
       - external
 
   # ─────────────────────────────────────────
+  #  BACKUP CRON
+  # ─────────────────────────────────────────
+  backup-cron:
+    build:
+      context: .
+      dockerfile: backup.Dockerfile
+    container_name: backup-cron
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./.backup:/backups
+    depends_on:
+      db-main:
+        condition: service_healthy
+      db-nut-reco:
+        condition: service_started
+    networks:
+      - internal
+
+  # ─────────────────────────────────────────
   #  N8N  (automatisation & backups)
   # ─────────────────────────────────────────
   n8n:
@@ -199,10 +219,14 @@ services:
       DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD}
       DB_POSTGRESDB_SCHEMA: n8n
       N8N_ALLOW_EXEC: "true"
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_CREDENTIALS_B64: ${N8N_CREDENTIALS_B64:-}
     volumes:
       - n8n_data:/home/node/.n8n
       - /var/run/docker.sock:/var/run/docker.sock
       - ./.backup:/backups
+      - ./scripts:/scripts:ro
+      - ./n8n/workflows:/n8n-workflows:ro
     depends_on:
       db-main:
         condition: service_healthy

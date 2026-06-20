@@ -1,0 +1,154 @@
+{
+  "name": "Monitoring backup",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "backup-status",
+        "options": {}
+      },
+      "id": "node-webhook",
+      "name": "Backup Status",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "backup-status"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-error",
+              "leftValue": "={{ $json.body.status }}",
+              "rightValue": "error",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "node-if",
+      "name": "Erreur ?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sisinoudu34@gmail.com",
+        "toEmail": "shadowms6k@gmail.com",
+        "subject": "=Backup {{ $json.body.type }} réussi",
+        "emailFormat": "text",
+        "text": "=Le backup {{ $json.body.type }} s'est terminé avec succès.\nFichier : {{ $json.body.file }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        400
+      ],
+      "id": "998e8039-5ece-49d7-a390-379c99681440",
+      "name": "send email envoie ok",
+      "webhookId": "ba4952f1-1b41-40e9-be27-046d6a1d7c83",
+      "credentials": {
+        "smtp": {
+          "id": "Ze275pQ2AKmekzBg",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "sisinoudu34@gmail.com",
+        "toEmail": "shadowms6k@gmail.com",
+        "subject": "=Backup {{ $json.body.type }} échoué",
+        "emailFormat": "text",
+        "text": "=Le backup {{ $json.body.type }} a échoué.\nFichier : {{ $json.body.file }}\n\nVérifiez les logs : docker exec backup-cron cat /backups/backup.log",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        784,
+        176
+      ],
+      "id": "3627a2af-36f9-4bf6-83e8-5c864929121c",
+      "name": "send email envoie issue",
+      "webhookId": "8af5fdfd-0819-4796-8ceb-dbe93eb15d52",
+      "credentials": {
+        "smtp": {
+          "id": "Ze275pQ2AKmekzBg",
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Backup Status": {
+      "main": [
+        [
+          {
+            "node": "Erreur ?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Erreur ?": {
+      "main": [
+        [
+          {
+            "node": "send email envoie issue",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "send email envoie ok",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send email envoie issue": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "77124bc4-57d3-4ec7-bab2-119fefac6e4c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ce9316ba0c1de8d3c133d75a0c45571ee2a2b472c223a21d5ff060d53095f622"
+  },
+  "nodeGroups": [],
+  "id": "tkxm4bv9Bteqqg9o",
+  "tags": []
+}
