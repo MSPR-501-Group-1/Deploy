@@ -19,7 +19,6 @@ services:
     volumes:
       - ./database-main/01_initdb.sql:/docker-entrypoint-initdb.d/01_initdb.sql:ro
       - ./database-main/02_seed.sql:/docker-entrypoint-initdb.d/02_seed.sql:ro
-      - ./database-main/03_media_pipeline.sql:/docker-entrypoint-initdb.d/03_media_pipeline.sql:ro
       - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}" ]
