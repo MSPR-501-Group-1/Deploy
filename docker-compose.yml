@@ -253,13 +253,15 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: ${MINIO_BUCKET:-healthai-media}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW:-raw-uploads}
+      MINIO_BUCKET_PROD: ${MINIO_BUCKET_PROD:-production-medias}
     entrypoint: >
       /bin/sh -c "
         mc alias set myminio http://minio:9000 $${MINIO_ROOT_USER} $${MINIO_ROOT_PASSWORD};
-        mc mb --ignore-existing myminio/$${MINIO_BUCKET};
-        mc anonymous set download myminio/$${MINIO_BUCKET};
-        echo 'MinIO bucket ready';
+        mc mb --ignore-existing myminio/$${MINIO_BUCKET_RAW};
+        mc mb --ignore-existing myminio/$${MINIO_BUCKET_PROD};
+        mc anonymous set download myminio/$${MINIO_BUCKET_PROD};
+        echo 'MinIO buckets ready';
       "
     networks:
       - internal
@@ -344,13 +346,13 @@ services:
       OTEL_EXPORTER_OTLP_PROTOCOL: grpc
       OTEL_EXPORTER_OTLP_ENDPOINT: http://tempo:4317
       NODE_OPTIONS: "--require @opentelemetry/auto-instrumentations-node/register"
-      MINIO_ENDPOINT: minio
-      MINIO_PORT: 9000
-      MINIO_USE_SSL: "false"
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
-      MINIO_BUCKET: ${MINIO_BUCKET:-healthai-media}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL:-http://localhost:9000}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_BUCKET_RAW: ${MINIO_BUCKET_RAW}
+      MINIO_BUCKET_PROD: ${MINIO_BUCKET_PROD}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      MINIO_INTERNAL_URL: ${MINIO_INTERNAL_URL}
+      MINIO_APP_URL: ${MINIO_APP_URL}
     volumes:
       - ./data-etl/data/processed:/data/processed
     depends_on:
