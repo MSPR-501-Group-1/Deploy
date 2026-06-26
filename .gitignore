@@ -1,2 +1,4 @@
 .env
 /documentation/*
+n8n/workflows/credentials.json
+.backup/

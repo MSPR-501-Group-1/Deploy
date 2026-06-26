@@ -1,0 +1,119 @@
+# ─────────────────────────────────────────────────────────────────────────────
+#  INFRA CI/CD – MSPR 501
+#  Stack dédiée : Jenkins + SonarQube + PostgreSQL (SonarQube)
+#
+#  Ports choisis pour ne pas entrer en conflit avec l'appli (docker-compose.yml)
+#    Jenkins    : 8090  (l'appli utilise 8080)
+#    SonarQube  : 9002  (l'appli utilise 9000 et 9001 pour MinIO)
+#    PostgreSQL : interne uniquement (5432 dans le réseau cicd)
+#
+#  Démarrage :
+#    docker compose -f docker-compose.cicd-MSPR.yml up -d
+#
+#  Arrêt (en conservant les données) :
+#    docker compose -f docker-compose.cicd-MSPR.yml down
+#
+#  Arrêt + suppression des volumes (reset complet) :
+#    docker compose -f docker-compose.cicd-MSPR.yml down -v
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Jenkins ────────────────────────────────────────────────────────────────
+  jenkins:
+    image: jenkins/jenkins:lts-jdk17
+    container_name: mspr-jenkins
+    restart: unless-stopped
+    user: root                          # nécessaire pour accéder au socket Docker
+    environment:
+      JAVA_OPTS: >-
+        -Djenkins.install.runSetupWizard=false
+        -Dhudson.model.DirectoryBrowserSupport.CSP=
+    ports:
+      - "8090:8080"                     # UI Jenkins → http://localhost:8090
+      - "50001:50000"                   # Port agents Jenkins (50000 = appli, 50001 = MSPR CI)
+    volumes:
+      - jenkins_home:/var/jenkins_home          # Données Jenkins persistantes
+      - /var/run/docker.sock:/var/run/docker.sock  # Docker-in-Docker via socket
+      - C:\Travail\MSPR:/mspr                   # Repos locaux accessibles dans Jenkins (test local)
+    networks:
+      - cicd
+    depends_on:
+      sonarqube:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8080/login || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # ── SonarQube ──────────────────────────────────────────────────────────────
+  sonarqube:
+    image: sonarqube:community
+    container_name: mspr-sonarqube
+    restart: unless-stopped
+    environment:
+      SONAR_JDBC_URL:      jdbc:postgresql://sonar-db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: sonar_mspr_2024
+    ports:
+      - "9002:9000"                     # UI SonarQube → http://localhost:9002
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_logs:/opt/sonarqube/logs
+      - sonarqube_extensions:/opt/sonarqube/extensions
+    networks:
+      - cicd
+    depends_on:
+      sonar-db:
+        condition: service_healthy
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/api/system/status | grep -q '\"status\":\"UP\"' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 120s
+
+  # ── PostgreSQL (SonarQube) ─────────────────────────────────────────────────
+  sonar-db:
+    image: postgres:15-alpine
+    container_name: mspr-sonar-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       sonarqube
+      POSTGRES_USER:     sonar
+      POSTGRES_PASSWORD: sonar_mspr_2024
+    volumes:
+      - sonar_db_data:/var/lib/postgresql/data
+    networks:
+      - cicd
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sonar -d sonarqube"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+# ── Volumes persistants ────────────────────────────────────────────────────
+volumes:
+  jenkins_home:
+    name: mspr_jenkins_home
+  sonarqube_data:
+    name: mspr_sonarqube_data
+  sonarqube_logs:
+    name: mspr_sonarqube_logs
+  sonarqube_extensions:
+    name: mspr_sonarqube_extensions
+  sonar_db_data:
+    name: mspr_sonar_db_data
+
+# ── Réseau isolé CI/CD ─────────────────────────────────────────────────────
+networks:
+  cicd:
+    name: mspr_cicd
+    driver: bridge

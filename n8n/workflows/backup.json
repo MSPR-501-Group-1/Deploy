@@ -1,0 +1,35 @@
+{
+  "name": "Backup quotidien BDD",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "cronExpression", "expression": "0 2 * * *" }]
+        }
+      },
+      "id": "node-schedule",
+      "name": "Chaque nuit à 2h",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Les backups sont exécutés par le conteneur backup-cron.\n// Ce workflow sert de référence visuelle pour le scheduling.\nreturn [{ json: { info: 'Backup géré par backup-cron (voir scripts/)' } }];"
+      },
+      "id": "node-info",
+      "name": "Info",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    }
+  ],
+  "connections": {
+    "Chaque nuit à 2h": {
+      "main": [[{ "node": "Info", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "tags": []
+}
