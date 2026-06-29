@@ -1,4 +1,5 @@
 #!/bin/sh
+set -o pipefail
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DIR=/backups/backup-data-main
 mkdir -p "$DIR"
@@ -10,6 +11,7 @@ if docker exec database-main sh -c 'pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" -
     STATUS="ok"
 else
     STATUS="error"
+    rm -f "$DIR/backup_${TIMESTAMP}.sql.gz"
 fi
 
 curl -sf "http://n8n:5678/webhook/backup-status" \

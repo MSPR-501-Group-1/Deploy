@@ -1,4 +1,5 @@
 #!/bin/sh
+set -o pipefail
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
 DIR=/backups/backup-recommendation
 mkdir -p "$DIR"
@@ -15,6 +16,7 @@ if docker exec database-nutrition-recommendation sh -c \
     STATUS="ok"
 else
     STATUS="error"
+    rm -f "$DIR/backup_${TIMESTAMP}.archive.gz"
 fi
 
 curl -sf "http://n8n:5678/webhook/backup-status" \
